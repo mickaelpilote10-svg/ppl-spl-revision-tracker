@@ -107,6 +107,7 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
 .exam-card{border-left:5px solid var(--warm)}.exam-card h2{margin-bottom:8px}.exam-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}.exam-details div{padding:10px 12px;border-radius:8px;background:var(--bg)}.exam-details b{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}.exam-details span{font-weight:700}.exam-note{margin:12px 0 0;color:var(--muted);font-size:.9rem}
+.exam-result-list{display:grid;gap:14px}.exam-result-card{border-left:5px solid var(--ppl)}.exam-result-card h2{margin-bottom:6px}.exam-result-card .grid{margin-top:12px}.exam-result-card textarea{width:100%;min-height:90px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}.exam-result-done{border-left:5px solid var(--ok);padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--ok) 8%,var(--surface))}
 footer{max-width:860px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;color:var(--muted);font-size:.88rem}
 footer b{color:var(--ink)}
 </style>
@@ -183,6 +184,7 @@ footer b{color:var(--ink)}
 
 <footer><img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false"><div><b>PPL(A) / SPL Revision Tracker</b><br>© 2026 — Créé par Mickaël Rouiller</div></footer>
 
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -337,16 +339,50 @@ var blankExams=[
   {date:"2027-02-01",branches:"020 / 040",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"},
   {date:"2027-03-29",branches:"030 / 090",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"}
  ];
+ var examBranchNames={"010":"Droit aérien","020":"Connaissance générale des aéronefs","030":"Préparation du vol et performances","040":"Performances humaines","050":"Météorologie","060-1":"Navigation générale","060-2":"Radionavigation","070":"Procédures opérationnelles","080":"Principes du vol","090":"Communications"};
+ function examPdfKey(date){return "exam-result-pdf:"+user.id+":"+date}
+ function examPdfWasDownloaded(date){try{return localStorage.getItem(examPdfKey(date))==="1"}catch(e){return false}}
+ function examResultCard(exam){
+  if(examPdfWasDownloaded(exam.date))return '<section class="panel exam-result-done" aria-live="polite"><b>✓ Résultat téléchargé — '+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+'</b><p class="hint">Le PDF contient uniquement cet examen. Les notes et le fichier ne sont pas conservés sur le site.</p></section>';
+  var codes=exam.branches.split(" / ");
+  return '<section class="panel exam-result-card" data-exam-result-card="'+exam.date+'"><h2>📄 Résultat — examen blanc du '+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+'</h2><p class="hint">Saisis les résultats de cet examen seulement. Ils ne seront pas mélangés avec ceux des examens précédents.</p><div class="grid">'+codes.map(function(code){return '<div><label for="score-'+exam.date+'-'+code+'">'+code+' — '+esc(examBranchNames[code]||code)+'</label><input id="score-'+exam.date+'-'+code+'" type="text" maxlength="40" data-branch-score="'+code+'" placeholder="Ex. 18/25 ou 72 %"></div>'}).join("")+'</div><p><label for="note-'+exam.date+'">Remarque (facultative)</label><textarea id="note-'+exam.date+'" maxlength="600" data-exam-note placeholder="Ajoute un commentaire ou un conseil à retenir."></textarea></p><p class="hint">Le PDF téléchargé sera celui de cet examen uniquement. Le site n’archive pas tes notes ni le PDF.</p><p><button class="btn" type="button" data-download-exam="'+exam.date+'">Télécharger le résultat</button></p><p class="msg" id="msg-'+exam.date+'" role="status"></p></section>'
+ }
+ function downloadExamPdf(exam,card){
+  var PDF=window.jspdf&&window.jspdf.jsPDF;
+  if(!PDF){say("msg-"+exam.date,"Le générateur PDF est indisponible. Vérifie ta connexion Internet puis réessaie.");return}
+  var scores=Array.from(card.querySelectorAll("[data-branch-score]")).map(function(input){return{code:input.dataset.branchScore,name:examBranchNames[input.dataset.branchScore]||input.dataset.branchScore,value:input.value.trim()}}).filter(function(x){return x.value});
+  var note=card.querySelector("[data-exam-note]").value.trim();
+  if(!scores.length&&!note){say("msg-"+exam.date,"Ajoute au moins un résultat ou une remarque avant de télécharger.");return}
+  var doc=new PDF({unit:"mm",format:"a4"}),y=22;
+  doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("Résultat d’examen blanc",15,y);y+=13;
+  doc.setFont("helvetica","normal");doc.setFontSize(11);
+  var person=[profile.first_name,profile.last_name].filter(Boolean).join(" ");
+  if(person){doc.text("Élève : "+person,15,y);y+=8}
+  doc.text("Date : "+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"}),15,y);y+=8;
+  doc.text(doc.splitTextToSize("Lieu : "+exam.location,180),15,y);y+=8;
+  doc.text("Branches : "+exam.branches,15,y);y+=8;
+  doc.text(doc.splitTextToSize("Durée prévue : "+exam.duration+" · Instructeurs : "+exam.instructors,180),15,y);y+=12;
+  doc.setFont("helvetica","bold");doc.text("Résultats de cet examen",15,y);y+=8;doc.setFont("helvetica","normal");
+  if(scores.length)scores.forEach(function(x){doc.text(doc.splitTextToSize(x.code+" — "+x.name+" : "+x.value,180),18,y);y+=7});
+  else{doc.text("Aucun score détaillé saisi.",18,y);y+=7}
+  if(note){y+=4;doc.setFont("helvetica","bold");doc.text("Remarque",15,y);y+=7;doc.setFont("helvetica","normal");doc.text(doc.splitTextToSize(note,180),18,y)}
+  doc.save("Resultat_examen_blanc_"+exam.date+".pdf");
+  try{localStorage.setItem(examPdfKey(exam.date),"1")}catch(e){}
+  card.className="exam-result-done";card.innerHTML="<b>✓ PDF téléchargé</b><p>Ce fichier contient uniquement les résultats de l’examen du "+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+". Ni les notes ni le PDF ne sont conservés sur le site.</p>";
+ }
+ function bindExamResults(){document.querySelectorAll("[data-download-exam]").forEach(function(button){button.onclick=function(){var exam=blankExams.filter(function(x){return x.date===button.dataset.downloadExam})[0],card=button.closest("[data-exam-result-card]");if(exam&&card)downloadExamPdf(exam,card)}})}
  function cal(){var y=cm.getFullYear(),mo=cm.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),l=fs();
   var today=new Date();today.setHours(0,0,0,0);
   var upcoming=blankExams.filter(function(x){return new Date(x.date+"T00:00:00")>=today}).sort(function(a,b){return a.date<b.date?-1:1})[0];
   var exam=upcoming?'<section class="panel exam-card"><h2>📝 Prochain examen à blanc à venir</h2><div class="exam-details"><div><b>Date</b><span>'+new Date(upcoming.date+"T00:00:00").toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</span></div><div><b>Lieu</b><span>'+esc(upcoming.location)+'</span></div><div><b>Branches évaluées</b><span>'+esc(upcoming.branches)+'</span></div><div><b>Durée · Instructeurs</b><span>'+esc(upcoming.duration)+' · '+esc(upcoming.instructors)+'</span></div></div><p class="exam-note">Le programme distingue deux sites : Aérodrome régional de Fribourg-Écuvillens (LSGE) et Aérodrome de la Gruyère (LSGT).</p></section>':'<section class="panel exam-card"><h2>📝 Examens à blanc</h2><p class="hint">Il n’y a plus d’examen à blanc à venir dans le programme fourni.</p></section>',
-  h='<h1>Calendrier</h1>'+seg()+exam+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
+  var pastExams=blankExams.filter(function(x){return new Date(x.date+"T00:00:00")<today});
+   var results=pastExams.length?'<h2>Résultats des examens terminés</h2><p class="sub">Chaque téléchargement crée un PDF séparé, limité à l’examen sélectionné.</p><div class="exam-result-list">'+pastExams.map(examResultCard).join("")+'</div>':"";
+   h='<h1>Calendrier</h1>'+seg()+exam+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
   ["L","M","M","J","V","S","D"].forEach(function(d){h+='<div class="h">'+d+'</div>'});
   for(var i=0;i<first;i++)h+='<div></div>';
   for(var d=1;d<=dim;d++){var k=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),m=l.filter(function(x){return x.date===k}).reduce(function(a,x){return a+x.min},0);h+='<div'+(m?' class="on"':'')+'>'+d+(m?'<b>'+dur(m)+'</b>':'')+'</div>'}
   $("main").innerHTML=h+'</div></section>';bindSeg();
-  $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()}}
+  $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()};bindExamResults()}
 
 function profileV(){
  $("main").innerHTML='<h1>Mon profil</h1><section class="panel"><div class="grid"><div><label for="p-fn">Prénom</label><input id="p-fn" maxlength="60" value="'+esc(profile.first_name)+'"></div><div><label for="p-ln">Nom</label><input id="p-ln" maxlength="60" value="'+esc(profile.last_name)+'"></div></div>'+
