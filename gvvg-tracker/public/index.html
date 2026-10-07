@@ -85,6 +85,8 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .timer-controls .btn.alt{color:#fff;border-color:rgba(255,255,255,.65)}
 .timer-controls .btn:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:560px){.timer-stage{min-height:360px;padding:14px}.timer-card{padding:24px 16px}}
+.fiche-frame{padding:0;overflow:hidden}.fiche-frame iframe{display:block;width:100%;height:78vh;min-height:580px;border:0;background:var(--bg)}
+@media(max-width:560px){.fiche-frame iframe{height:74vh;min-height:520px}}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
@@ -254,8 +256,8 @@ async function logout(){await sb.auth.signOut()}
 
 /* ---------- Interface ---------- */
 function go(v,c){view=v;cur=c||null;render();window.scrollTo(0,0)}
-function nav(){var t=[["dash","Tableau de bord"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
- $("nav").innerHTML=t.map(function(a){return '<button data-v="'+a[0]+'"'+((view===a[0]||(view==="sub"&&a[0]==="dash"))?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
+function nav(){var t=[["dash","Tableau de bord"],["fiches","Mes fiches de révisions"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
+ $("nav").innerHTML=t.map(function(a){var current=view===a[0]||(view==="sub"&&a[0]==="dash")||(view==="fiche"&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
  $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
 function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
@@ -344,6 +346,17 @@ function setv(){$("main").innerHTML='<h1>Paramètres</h1><section class="panel">
   u.protocol="https:";$("ql").value=u.href;saveLink(u.href,"Lien enregistré. Il est disponible sur la page 050 — Météorologie.")};
  $("qc").onclick=function(){$("ql").value="";saveLink(null,"Lien supprimé.")}}
 
+function fiches(){
+ var h='<h1>Mes fiches de révisions</h1><p class="sub">Choisis une branche pour ouvrir ta fiche de révision.</p>';
+ h+='<section class="cat ppl"><div class="hd"><h2>✈️ PPL(A)</h2><p>Fiches de révision par matière</p></div><button class="row" data-fiche="050"><span class="code">050</span><span><strong>Météorologie</strong><br><small>Fiche de révision · 6 chapitres</small></span><span class="n">Ouvrir →</span></button></section>';
+ $("main").innerHTML=h;
+ document.querySelectorAll("[data-fiche]").forEach(function(b){b.onclick=function(){go("fiche",b.dataset.fiche)}})
+}
+function ficheView(){
+ if(cur!=="050"){go("fiches");return}
+ $("main").innerHTML='<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Météorologie 050</h1><p class="sub">Fiche de révision — synthèse de cours</p><section class="panel fiche-frame"><iframe title="Fiche de révision Météorologie 050" src="fiches/meteorologie-050.html" loading="lazy"></iframe></section>';
+ $("fiches-back").onclick=function(){go("fiches")}
+}
 function chronoFormat(ms){var total=Math.floor(Math.max(0,ms)/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(function(x){return String(x).padStart(2,"0")}).join(":")}
 function chronoCurrent(){return chronoElapsed+(chronoStartedAt===null?0:Date.now()-chronoStartedAt)}
 function chronoDraw(){var e=$("chrono-display");if(e)e.textContent=chronoFormat(chronoCurrent())}
@@ -357,7 +370,7 @@ function chronoView(){
  };
  $("chrono-reset").onclick=function(){chronoElapsed=0;chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}chronoView()}
 }
-function render(){if(!user)return;nav();({dash:dash,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+function render(){if(!user)return;nav();({dash:dash,fiches:fiches,fiche:ficheView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
 })();
 </script>
 </body>
