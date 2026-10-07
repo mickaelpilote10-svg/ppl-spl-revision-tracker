@@ -22,6 +22,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3
 @media (prefers-reduced-motion:reduce){#auth svg.path path{animation:none}}
 .card{position:relative;width:100%;max-width:420px;background:rgba(10,28,46,.82);border:1px solid rgba(111,177,234,.28);border-radius:16px;padding:28px 24px;backdrop-filter:blur(8px)}
 .card img{max-height:44px;max-width:120px;object-fit:contain;display:block;margin:0 0 14px}
+.brandmark-crop{position:relative;display:block;overflow:hidden;flex:none;width:90px;height:36px}
+.brandmark-crop img{position:absolute;left:0;top:-66px;width:178px!important;height:auto!important;max-width:none!important;max-height:none!important;object-fit:unset}
+.brandmark-crop.auth-logo{width:120px;height:48px;margin:0 0 14px}
+.brandmark-crop.auth-logo img{top:-88px;width:238px!important;margin:0}
 .card h1{font:700 1.7rem/1.15 Georgia,serif;margin:0}.card h1 small{display:block;font:600 1rem/1.4 "Segoe UI",sans-serif;color:#9cc7ee;margin-top:2px}
 .card .tag{color:#a9bdd0;margin:10px 0 18px;font-size:.95rem}
 .card h2{font:700 1.2rem Georgia,serif;margin:0 0 12px;color:#fff}
@@ -117,7 +121,7 @@ footer b{color:var(--ink)}
 <section id="auth" hidden>
 <svg class="path" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M-20 520 C 180 420, 260 540, 420 360 S 700 180, 840 60"/></svg>
 <div class="card">
-  <img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false">
+  <span class="brandmark-crop auth-logo"><img src="assets/logo-mickael.png" alt="Logo de Mickael Rouiller" hidden onload="this.hidden=false"></span>
   <h1>✈️ PPL(A) / SPL<small>Revision Tracker</small></h1>
   <p class="tag">Ton espace personnel de suivi de formation aéronautique.</p>
 
@@ -175,13 +179,13 @@ footer b{color:var(--ink)}
 <!-- ============ APPLICATION ============ -->
 <div id="app" hidden>
 <div class="wrap">
-<header><img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false"><span class="brand">PPL(A) / SPL Revision Tracker</span></header>
+<header><span class="brandmark-crop"><img src="assets/logo-mickael.png" alt="Logo de Mickael Rouiller" hidden onload="this.hidden=false"></span><span class="brand">PPL(A) / SPL Revision Tracker</span></header>
 <nav id="nav"></nav>
 <main id="main"></main>
 </div>
 </div>
 
-<footer><img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false"><div><b>PPL(A) / SPL Revision Tracker</b><br>© 2026 — Créé par Mickaël Rouiller</div></footer>
+<footer><span class="brandmark-crop"><img src="assets/logo-mickael.png" alt="Logo de Mickael Rouiller" hidden onload="this.hidden=false"></span><div><b>PPL(A) / SPL Revision Tracker</b><br>© 2026 — Créé par Mickaël Rouiller</div></footer>
 
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="config.js"></script>
