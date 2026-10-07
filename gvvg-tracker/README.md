@@ -30,7 +30,21 @@ Authentication → URL Configuration :
 - **Site URL** : l'adresse finale du site (ex. `https://tracker.exemple.ch`)
 - **Redirect URLs** : la même adresse (+ `http://localhost:8080` pour les tests)
 
-**SMTP (important)** : le service d'e-mail par défaut de Supabase est limité et réservé aux tests. Pour un vrai usage, Authentication → SMTP Settings → configure un fournisseur (Resend, Brevo, Postmark…) avec une adresse d'expéditeur de ton domaine.
+**SMTP (important)** : le service d'e-mail par défaut de Supabase est limité aux adresses autorisées de l'organisation et à un faible débit. Pour permettre l'inscription d'autres personnes, configure un SMTP personnalisé.
+
+**Option sans achat de domaine pour un petit volume : Gmail** (à tester avant d'ouvrir largement le site ; Google peut limiter ou refuser l'envoi et cette solution n'est pas conçue pour les envois massifs). Le guide Supabase décrit Google SMTP, notamment avec Google Workspace. Les mots de passe d'application Google nécessitent la validation en deux étapes et ne sont pas disponibles pour tous les comptes.
+
+1. Dans ton compte Google, active la validation en deux étapes et crée un mot de passe d'application pour Supabase. N'utilise pas ton mot de passe Gmail habituel.
+2. Dans Supabase → Authentication → SMTP Settings, active le SMTP personnalisé et renseigne :
+   - Host : `smtp.gmail.com`
+   - Port : `587` (TLS) ou `465` (SSL)
+   - Sender email : ton adresse Gmail
+   - Sender name : `PPL(A) / SPL Revision Tracker`
+   - SMTP username : la même adresse Gmail
+   - SMTP password : le mot de passe d'application Google
+3. Enregistre les réglages et teste d'abord une inscription vers une adresse qui n'est pas membre de ton organisation Supabase. Saisis le mot de passe d'application directement dans Supabase ; ne le mets ni dans GitHub, ni dans le code, ni dans Vercel.
+
+Garde **Confirm email** activé. Si tu as besoin d'un volume plus important ou d'une meilleure délivrabilité, utilise un fournisseur transactionnel avec un domaine vérifié.
 
 ## Étape 3 — E-mails (Authentication → Email Templates)
 **Confirm signup** — sujet : `Bienvenue sur PPL(A) / SPL Revision Tracker ✈️`
@@ -62,12 +76,13 @@ Modèle **Change Email Address** : traduis-le de la même façon (il contient `{
 1. Copie ton logo dans `public/assets/logo-gvvg.png` (même nom).
 2. Test local : modifie `public/config.js` avec tes valeurs, puis `cd public && python3 -m http.server 8080` → http://localhost:8080
 
-## Étape 5 — Mise en ligne (Netlify, Vercel ou Cloudflare Pages)
-1. Pousse ce dossier sur un dépôt GitHub (ne commit pas de vraie clé si tu préfères les variables d'environnement).
-2. Crée un site depuis ce dépôt : **Build command** `sh build.sh` — **Publish / output directory** `public`.
-3. Ajoute `SUPABASE_URL` et `SUPABASE_ANON_KEY` dans les variables d'environnement de l'hébergeur.
-4. Déploie, puis mets l'URL finale dans Supabase (Site URL + Redirect URLs, étape 2).
-5. Ajoute éventuellement ton domaine, en HTTPS.
+## Étape 5 — Mise en ligne Vercel
+1. Connecte le dépôt GitHub et choisis `gvvg-tracker` comme **Root Directory**.
+2. Choisis **Framework Preset: Other**, laisse **Build Command** vide et règle **Output Directory** sur `public`. C'est la configuration du projet actuel.
+3. Le fichier `public/config.js` contient uniquement l'URL Supabase et la clé publique publishable. Ces valeurs sont destinées au navigateur ; la sécurité des données repose sur les politiques RLS. N'ajoute jamais une clé `service_role` au site.
+4. Déploie, puis configure l'URL de production dans Supabase (Site URL + Redirect URLs, étape 2).
+
+Si tu choisis plutôt d'exécuter `sh build.sh`, configure aussi `SUPABASE_URL` et `SUPABASE_ANON_KEY` dans l'hébergeur : le script génère alors `public/config.js` à partir de ces variables.
 
 ## Sécurité — ce qui est en place
 - Hash des mots de passe, sessions JWT à expiration + refresh, déconnexion (`signOut`).
