@@ -105,6 +105,7 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
+.exam-card{border-left:5px solid var(--warm)}.exam-card h2{margin-bottom:8px}.exam-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}.exam-details div{padding:10px 12px;border-radius:8px;background:var(--bg)}.exam-details b{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}.exam-details span{font-weight:700}.exam-note{margin:12px 0 0;color:var(--muted);font-size:.9rem}
 footer{max-width:860px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;color:var(--muted);font-size:.88rem}
 footer b{color:var(--ink)}
 </style>
@@ -329,13 +330,22 @@ function add(){var opts=["ppl","spl"].map(function(k){return '<optgroup label="'
   if(r.error){fail("a-msg",r.error);return}
   sessions.push({id:r.data.id,date:d,min:m,s:sj,note:n});render();say("a-msg","Séance ajoutée.",true)}}
 
-function cal(){var y=cm.getFullYear(),mo=cm.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),l=fs(),
- h='<h1>Calendrier</h1>'+seg()+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
- ["L","M","M","J","V","S","D"].forEach(function(d){h+='<div class="h">'+d+'</div>'});
- for(var i=0;i<first;i++)h+='<div></div>';
- for(var d=1;d<=dim;d++){var k=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),m=l.filter(function(x){return x.date===k}).reduce(function(a,x){return a+x.min},0);h+='<div'+(m?' class="on"':'')+'>'+d+(m?'<b>'+dur(m)+'</b>':'')+'</div>'}
- $("main").innerHTML=h+'</div></section>';bindSeg();
- $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()}}
+var blankExams=[
+  {date:"2026-10-12",branches:"080 / 050 / 070",duration:"2 h 30",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"},
+  {date:"2026-12-14",branches:"010 / 060-1 / 060-2",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"},
+  {date:"2027-02-01",branches:"020 / 040",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"},
+  {date:"2027-03-29",branches:"030 / 090",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"}
+ ];
+ function cal(){var y=cm.getFullYear(),mo=cm.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),l=fs();
+  var today=new Date();today.setHours(0,0,0,0);
+  var upcoming=blankExams.filter(function(x){return new Date(x.date+"T00:00:00")>=today}).sort(function(a,b){return a.date<b.date?-1:1})[0];
+  var exam=upcoming?'<section class="panel exam-card"><h2>📝 Prochain examen à blanc à venir</h2><div class="exam-details"><div><b>Date</b><span>'+new Date(upcoming.date+"T00:00:00").toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</span></div><div><b>Lieu</b><span>'+esc(upcoming.location)+'</span></div><div><b>Branches évaluées</b><span>'+esc(upcoming.branches)+'</span></div><div><b>Durée · Instructeurs</b><span>'+esc(upcoming.duration)+' · '+esc(upcoming.instructors)+'</span></div></div><p class="exam-note">Le programme distingue deux sites : Aérodrome régional de Fribourg-Écuvillens (LSGE) et Aérodrome de la Gruyère (LSGT).</p></section>':'<section class="panel exam-card"><h2>📝 Examens à blanc</h2><p class="hint">Il n’y a plus d’examen à blanc à venir dans le programme fourni.</p></section>',
+  h='<h1>Calendrier</h1>'+seg()+exam+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
+  ["L","M","M","J","V","S","D"].forEach(function(d){h+='<div class="h">'+d+'</div>'});
+  for(var i=0;i<first;i++)h+='<div></div>';
+  for(var d=1;d<=dim;d++){var k=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),m=l.filter(function(x){return x.date===k}).reduce(function(a,x){return a+x.min},0);h+='<div'+(m?' class="on"':'')+'>'+d+(m?'<b>'+dur(m)+'</b>':'')+'</div>'}
+  $("main").innerHTML=h+'</div></section>';bindSeg();
+  $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()}}
 
 function profileV(){
  $("main").innerHTML='<h1>Mon profil</h1><section class="panel"><div class="grid"><div><label for="p-fn">Prénom</label><input id="p-fn" maxlength="60" value="'+esc(profile.first_name)+'"></div><div><label for="p-ln">Nom</label><input id="p-ln" maxlength="60" value="'+esc(profile.last_name)+'"></div></div>'+
