@@ -73,6 +73,18 @@ ul.log{list-style:none;margin:0;padding:0}ul.log li{display:flex;justify-content
 ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inherit}
 .tag2{display:inline-block;border-radius:6px;padding:1px 8px;font-size:.85rem;font-weight:700;background:var(--c);color:var(--on)}
 .quizlet{border-left:5px solid var(--warm)}
+/* ---------- Chronomètre ---------- */
+.timer-stage{min-height:430px;display:grid;place-items:center;padding:20px;overflow:hidden;border-radius:14px;background:linear-gradient(90deg,rgba(5,18,31,.62),rgba(5,18,31,.18)),url("assets/glider-timer.jpg") center 54%/cover no-repeat}
+.timer-card{width:min(100%,540px);padding:clamp(22px,5vw,42px);border:1px solid rgba(255,255,255,.35);border-radius:18px;background:rgba(7,23,39,.72);color:#fff;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.28);backdrop-filter:blur(7px)}
+.timer-card h2{color:#fff;margin:0 0 8px}
+.timer-card .hint{color:#e4edf5}
+.timer-clock{margin:18px 0;color:#fff;font:700 clamp(2.7rem,10vw,5.2rem)/1 ui-monospace,"Cascadia Mono","Segoe UI Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:.035em}
+.timer-status{min-height:1.5em;margin:0;color:#dbeafa}
+.timer-controls{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:24px}
+.timer-controls .btn{min-width:145px}
+.timer-controls .btn.alt{color:#fff;border-color:rgba(255,255,255,.65)}
+.timer-controls .btn:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:560px){.timer-stage{min-height:360px;padding:14px}.timer-card{padding:24px 16px}}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
@@ -170,6 +182,7 @@ var S=[["010","Droit aérien","ppl"],["040","Performances humaines","ppl"],["050
 var CAT={ppl:{t:"✈️ PPL(A) — AVION",s:"Matières PPL(A) — matières communes · 4 matières",lab:"PPL(A)"},spl:{t:"🛩️ SPL — PLANEUR",s:"Matières spécifiques au planeur · 5 matières",lab:"SPL / Planeur"}};
 var user=null,loaded=null,recovery=false,profile={},sessions=[],goals={},filter="all",view="dash",cur=null;
 var now=new Date(),cm=new Date(now.getFullYear(),now.getMonth(),1);
+var chronoElapsed=0,chronoStartedAt=null,chronoInterval=null;
 function by(c){return S.filter(function(s){return s.c===c})[0]}
 function fs(){return sessions.filter(function(x){return filter==="all"||by(x.s).cat===filter})}
 function ofS(c){return sessions.filter(function(x){return x.s===c})}
@@ -241,7 +254,7 @@ async function logout(){await sb.auth.signOut()}
 
 /* ---------- Interface ---------- */
 function go(v,c){view=v;cur=c||null;render();window.scrollTo(0,0)}
-function nav(){var t=[["dash","Tableau de bord"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
+function nav(){var t=[["dash","Tableau de bord"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
  $("nav").innerHTML=t.map(function(a){return '<button data-v="'+a[0]+'"'+((view===a[0]||(view==="sub"&&a[0]==="dash"))?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
  $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
@@ -331,7 +344,20 @@ function setv(){$("main").innerHTML='<h1>Paramètres</h1><section class="panel">
   u.protocol="https:";$("ql").value=u.href;saveLink(u.href,"Lien enregistré. Il est disponible sur la page 050 — Météorologie.")};
  $("qc").onclick=function(){$("ql").value="";saveLink(null,"Lien supprimé.")}}
 
-function render(){if(!user)return;nav();({dash:dash,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+function chronoFormat(ms){var total=Math.floor(Math.max(0,ms)/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(function(x){return String(x).padStart(2,"0")}).join(":")}
+function chronoCurrent(){return chronoElapsed+(chronoStartedAt===null?0:Date.now()-chronoStartedAt)}
+function chronoDraw(){var e=$("chrono-display");if(e)e.textContent=chronoFormat(chronoCurrent())}
+function chronoView(){
+ var running=chronoStartedAt!==null,elapsed=chronoCurrent();
+ $("main").innerHTML='<h1>Chronomètre</h1><p class="sub">Lance ton chronomètre pendant une séance de révision.</p><section class="timer-stage" aria-label="Chronomètre avec un planeur en arrière-plan"><div class="timer-card"><h2>Temps de révision</h2><p class="hint">Un vol à la fois, une matière à la fois.</p><div class="timer-clock" id="chrono-display" role="timer" aria-live="off">'+chronoFormat(elapsed)+'</div><p class="timer-status" id="chrono-status" role="status">'+(running?"Chronomètre en cours":elapsed>0?"En pause":"Prêt à démarrer")+'</p><div class="timer-controls"><button class="btn" id="chrono-toggle" aria-pressed="'+running+'">'+(running?"Pause":elapsed>0?"Reprendre":"Démarrer")+'</button><button class="btn alt" id="chrono-reset"'+(elapsed===0&&!running?" disabled":"")+'>Réinitialiser</button></div></div></section>';
+ $("chrono-toggle").onclick=function(){
+  if(chronoStartedAt!==null){chronoElapsed=chronoCurrent();chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}}
+  else{chronoStartedAt=Date.now();if(!chronoInterval)chronoInterval=setInterval(chronoDraw,250)}
+  chronoView()
+ };
+ $("chrono-reset").onclick=function(){chronoElapsed=0;chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}chronoView()}
+}
+function render(){if(!user)return;nav();({dash:dash,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
 })();
 </script>
 </body>
