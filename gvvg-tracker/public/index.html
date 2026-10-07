@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PPL(A) / SPL Revision Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
+<style>
+:root{--bg:#eef3f7;--surface:#fff;--ink:#14263a;--muted:#5b6b7c;--line:#cfd9e3;--ppl:#1f5f99;--spl:#2a7d4f;--on:#fff;--warm:#c9780b;--err:#b3341f;--ok:#2a7d4f}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1b29;--surface:#172637;--ink:#e6edf4;--muted:#93a3b4;--line:#2a3d52;--ppl:#6fb1ea;--spl:#5cc58a;--on:#0b1622;--warm:#f0a73a;--err:#ff8b75;--ok:#5cc58a}}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3","Segoe UI",system-ui,sans-serif}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--warm);outline-offset:2px}
+/* ---------- Connexion ---------- */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px 24px;color:#e8f1fa;position:relative;overflow:hidden;
+ background:radial-gradient(120% 80% at 80% 0%,#15497a 0%,#0a2036 55%,#06121f 100%)}
+#auth svg.path{position:absolute;inset:0;width:100%;height:100%;opacity:.35;pointer-events:none}
+#auth svg.path path{stroke:#6fb1ea;stroke-width:1.5;fill:none;stroke-dasharray:6 10;animation:drift 40s linear infinite}
+@keyframes drift{to{stroke-dashoffset:-800}}
+@media (prefers-reduced-motion:reduce){#auth svg.path path{animation:none}}
+.card{position:relative;width:100%;max-width:420px;background:rgba(10,28,46,.82);border:1px solid rgba(111,177,234,.28);border-radius:16px;padding:28px 24px;backdrop-filter:blur(8px)}
+.card img{max-height:44px;max-width:120px;object-fit:contain;display:block;margin:0 0 14px}
+.card h1{font:700 1.7rem/1.15 Georgia,serif;margin:0}.card h1 small{display:block;font:600 1rem/1.4 "Segoe UI",sans-serif;color:#9cc7ee;margin-top:2px}
+.card .tag{color:#a9bdd0;margin:10px 0 18px;font-size:.95rem}
+.card h2{font:700 1.2rem Georgia,serif;margin:0 0 12px;color:#fff}
+.card label{color:#cfe0f0}.card input{background:#0a1b2d;border-color:#2c4a69;color:#fff}
+.card .hint{color:#9fb3c6}.card .msg{min-height:1.3em}
+.card .btn{background:#4aa3e8;color:#06121f;width:100%;margin-top:6px}
+.card .lnk{background:none;border:0;color:#8cc4f3;font:inherit;cursor:pointer;padding:6px 0;text-decoration:underline}
+.card .links{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-top:10px}
+.card .field{margin-bottom:12px}.card .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:380px){.card .two{grid-template-columns:1fr}}
+/* ---------- Application ---------- */
+.wrap{max-width:860px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 24px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+header img,footer img{max-height:36px;max-width:90px;width:auto;height:auto;object-fit:contain}
+.brand{font:700 1.15rem/1.2 Georgia,serif;flex:1}
+nav{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:18px}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:inherit;font-weight:600;padding:9px 12px;cursor:pointer}
+nav button[aria-current="page"]{color:var(--ink);border-bottom-color:var(--warm)}
+h1{font:700 1.8rem/1.15 Georgia,serif;margin:0 0 4px}
+h2{font:700 1.15rem/1.2 Georgia,serif;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px;background:var(--surface)}
+.seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.tot{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:18px}
+.tot b{display:block;font:700 1.6rem/1.2 Georgia,serif}.tot span{color:var(--muted);font-size:.9rem}
+.cat{border:2px solid var(--c);border-radius:12px;margin-bottom:20px;background:var(--surface);overflow:hidden}
+.cat>.hd{background:var(--c);color:var(--on);padding:12px 16px}
+.cat>.hd h2{margin:0;font-size:1.3rem;color:inherit}.cat>.hd p{margin:2px 0 0;font-size:.92rem;opacity:.92}
+.ppl{--c:var(--ppl)}.spl{--c:var(--spl)}
+.row{display:grid;grid-template-columns:52px 1fr auto auto auto;gap:12px;align-items:center;width:100%;background:none;border:0;border-top:1px solid var(--line);color:var(--ink);font:inherit;text-align:left;padding:12px 16px;cursor:pointer}
+.row:hover{background:var(--bg)}.row .code{font:700 1.1rem Georgia,serif;color:var(--c)}.row small{color:var(--muted)}.row .n{text-align:right;min-width:64px}
+@media (max-width:560px){.row{grid-template-columns:44px 1fr auto}.row .x{display:none}}
+.bar{display:grid;grid-template-columns:70px 1fr 60px;gap:8px;align-items:center;margin:6px 0;font-size:.92rem}
+.bar i{display:block;height:14px;background:var(--c);border-radius:3px;min-width:2px}
+.wk{display:flex;gap:8px;align-items:end;height:130px}
+.wk div{flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;height:100%;font-size:.78rem;color:var(--muted)}
+.wk i{display:block;width:100%;background:var(--warm);border-radius:3px 3px 0 0}
+label{display:block;font-weight:600;margin-bottom:4px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:end}
+.btn{display:inline-block;background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+.btn.alt{background:none;color:var(--ink);border:1px solid var(--line)}
+.msg{margin:8px 0 0;font-weight:600;min-height:1.4em}.msg.err{color:var(--err)}.msg.ok{color:var(--ok)}
+.card .msg.err{color:#ff9d8c}.card .msg.ok{color:#8fe0b0}
+.hint{color:var(--muted);font-size:.92rem}
+ul.log{list-style:none;margin:0;padding:0}ul.log li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inherit}
+.tag2{display:inline-block;border-radius:6px;padding:1px 8px;font-size:.85rem;font-weight:700;background:var(--c);color:var(--on)}
+.quizlet{border-left:5px solid var(--warm)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
+.cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
+footer{max-width:860px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;color:var(--muted);font-size:.88rem}
+footer b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE DE CONNEXION ============ -->
+<section id="auth" hidden>
+<svg class="path" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M-20 520 C 180 420, 260 540, 420 360 S 700 180, 840 60"/></svg>
+<div class="card">
+  <img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false">
+  <h1>✈️ PPL(A) / SPL<small>Revision Tracker</small></h1>
+  <p class="tag">Ton espace personnel de suivi de formation aéronautique.</p>
+
+  <div id="p-login">
+    <h2>Connexion</h2>
+    <form id="f-login" novalidate>
+      <div class="field"><label for="l-mail">Adresse e-mail</label><input id="l-mail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="l-pw">Mot de passe</label><input id="l-pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn" type="submit">Se connecter</button>
+      <p class="msg" id="m-login" role="status"></p>
+    </form>
+    <div class="links"><button class="lnk" data-go="signup">Créer un compte</button><button class="lnk" data-go="forgot">Mot de passe oublié ?</button></div>
+  </div>
+
+  <div id="p-signup" hidden>
+    <h2>Créer un compte</h2>
+    <form id="f-signup" novalidate>
+      <div class="two"><div class="field"><label for="s-fn">Prénom</label><input id="s-fn" autocomplete="given-name" maxlength="60" required></div>
+      <div class="field"><label for="s-ln">Nom</label><input id="s-ln" autocomplete="family-name" maxlength="60" required></div></div>
+      <div class="field"><label for="s-mail">Adresse e-mail</label><input id="s-mail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="s-pw">Mot de passe</label><input id="s-pw" type="password" autocomplete="new-password" required><p class="hint">10 caractères minimum, avec majuscule, minuscule et chiffre.</p></div>
+      <div class="field"><label for="s-pw2">Confirmer le mot de passe</label><input id="s-pw2" type="password" autocomplete="new-password" required></div>
+      <button class="btn" type="submit">Créer mon compte</button>
+      <p class="msg" id="m-signup" role="status"></p>
+    </form>
+    <div class="links"><button class="lnk" data-go="login">J’ai déjà un compte</button></div>
+  </div>
+
+  <div id="p-forgot" hidden>
+    <h2>Mot de passe oublié</h2>
+    <p class="hint">Entre ton adresse e-mail : tu recevras un lien sécurisé et temporaire pour choisir un nouveau mot de passe.</p>
+    <form id="f-forgot" novalidate>
+      <div class="field"><label for="f-mail">Adresse e-mail</label><input id="f-mail" type="email" autocomplete="email" required></div>
+      <button class="btn" type="submit">Envoyer le lien</button>
+      <p class="msg" id="m-forgot" role="status"></p>
+    </form>
+    <div class="links"><button class="lnk" data-go="login">Retour à la connexion</button></div>
+  </div>
+
+  <div id="p-reset" hidden>
+    <h2>Nouveau mot de passe</h2>
+    <form id="f-reset" novalidate>
+      <div class="field"><label for="r-pw">Nouveau mot de passe</label><input id="r-pw" type="password" autocomplete="new-password" required><p class="hint">10 caractères minimum, avec majuscule, minuscule et chiffre.</p></div>
+      <div class="field"><label for="r-pw2">Confirmer le mot de passe</label><input id="r-pw2" type="password" autocomplete="new-password" required></div>
+      <button class="btn" type="submit">Enregistrer le mot de passe</button>
+      <p class="msg" id="m-reset" role="status"></p>
+    </form>
+  </div>
+
+  <div id="p-notice" hidden><h2 id="n-title"></h2><p id="n-text"></p><button class="btn" id="n-btn" hidden></button></div>
+  <div id="p-setup" hidden><h2>Configuration requise</h2><p>Renseigne <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> dans <code>public/config.js</code> (voir le guide de déploiement).</p></div>
+</div>
+</section>
+
+<!-- ============ APPLICATION ============ -->
+<div id="app" hidden>
+<div class="wrap">
+<header><img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false"><span class="brand">PPL(A) / SPL Revision Tracker</span></header>
+<nav id="nav"></nav>
+<main id="main"></main>
+</div>
+</div>
+
+<footer><img src="assets/logo-gvvg.png" alt="Logo GVVG" hidden onload="this.hidden=false"><div><b>PPL(A) / SPL Revision Tracker</b><br>© 2026 — Créé par Mickaël Rouiller</div></footer>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var CFG=window.APP_CONFIG||{};
+function pane(n){["login","signup","forgot","reset","notice","setup"].forEach(function(p){$("p-"+p).hidden=(p!==n)});$("auth").hidden=false;$("app").hidden=true}
+if(!/^https:\/\//.test(CFG.SUPABASE_URL||"")||!CFG.SUPABASE_ANON_KEY||/VOTRE/.test(CFG.SUPABASE_URL+CFG.SUPABASE_ANON_KEY)){pane("setup");return}
+var sb=supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+var BACK=location.origin+location.pathname;
+
+/* ---------- Données ---------- */
+var S=[["010","Droit aérien","ppl"],["040","Performances humaines","ppl"],["050","Météorologie","ppl"],["090","Communications","ppl"],
+["020","Connaissance générale des aéronefs","spl"],["030","Préparation du vol et performances","spl"],["060","Navigation","spl"],["070","Procédures opérationnelles","spl"],["080","Principes du vol","spl"]].map(function(a){return{c:a[0],n:a[1],cat:a[2]}});
+var CAT={ppl:{t:"✈️ PPL(A) — AVION",s:"Matières PPL(A) — matières communes · 4 matières",lab:"PPL(A)"},spl:{t:"🛩️ SPL — PLANEUR",s:"Matières spécifiques au planeur · 5 matières",lab:"SPL / Planeur"}};
+var user=null,loaded=null,recovery=false,profile={},sessions=[],goals={},filter="all",view="dash",cur=null;
+var now=new Date(),cm=new Date(now.getFullYear(),now.getMonth(),1);
+function by(c){return S.filter(function(s){return s.c===c})[0]}
+function fs(){return sessions.filter(function(x){return filter==="all"||by(x.s).cat===filter})}
+function ofS(c){return sessions.filter(function(x){return x.s===c})}
+function dur(m){var h=Math.floor(m/60),r=m%60;return h?h+" h "+(r<10?"0":"")+r:r+" min"}
+function fd(i){var p=i.split("-");return p[2]+"/"+p[1]+"/"+p[0]}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function st(l){var d=l.map(function(x){return x.date}).sort().pop();return{min:l.reduce(function(a,x){return a+x.min},0),n:l.length,last:d?fd(d):"Aucune"}}
+function say(id,t,ok){var e=$(id);e.textContent=t;e.className="msg "+(ok?"ok":"err")}
+function fail(id,e){say(id,"Une erreur est survenue : "+(e&&e.message?e.message:"réessaie dans un instant."),false)}
+function pwOk(p){return p.length>=10&&/[a-z]/.test(p)&&/[A-Z]/.test(p)&&/\d/.test(p)}
+function mailOk(m){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(m)}
+var PWMSG="Le mot de passe doit contenir au moins 10 caractères, avec une majuscule, une minuscule et un chiffre.";
+
+async function load(){
+ var r=await Promise.all([sb.from("profiles").select("*").eq("id",user.id).maybeSingle(),
+  sb.from("sessions").select("*").order("session_date",{ascending:false}).limit(5000),sb.from("goals").select("*")]);
+ var err=r[0].error||r[1].error||r[2].error;if(err)throw err;
+ var md=user.user_metadata||{};
+ profile=r[0].data||{first_name:md.first_name||"",last_name:md.last_name||"",quizlet_link:null};
+ sessions=r[1].data.map(function(x){return{id:x.id,date:x.session_date,min:x.minutes,s:x.subject,note:x.note||""}});
+ goals={};r[2].data.forEach(function(g){goals[g.subject]=Number(g.hours)});
+}
+async function boot(u){
+ user=u;loaded=u.id;
+ try{await load()}catch(e){loaded=null;pane("notice");$("n-title").textContent="Chargement impossible";$("n-text").textContent="Vérifie que le schéma SQL a bien été exécuté. ("+(e.message||e)+")";return}
+ $("auth").hidden=true;$("app").hidden=false;view="dash";filter="all";render();window.scrollTo(0,0)}
+function clearState(){user=null;loaded=null;profile={};sessions=[];goals={};$("main").innerHTML="";["l-pw","s-pw","s-pw2","r-pw","r-pw2"].forEach(function(i){$(i).value=""})}
+
+/* ---------- Authentification ---------- */
+document.querySelectorAll("[data-go]").forEach(function(b){b.onclick=function(){pane(b.dataset.go)}});
+$("f-login").onsubmit=async function(e){e.preventDefault();
+ var m=$("l-mail").value.trim(),p=$("l-pw").value;
+ if(!mailOk(m)||!p){say("m-login","Saisis une adresse e-mail valide et ton mot de passe.");return}
+ say("m-login","Connexion…",true);
+ var r=await sb.auth.signInWithPassword({email:m,password:p});
+ if(r.error){say("m-login",/not confirmed/i.test(r.error.message)?"Confirme d’abord ton adresse avec le lien reçu par e-mail.":/invalid login/i.test(r.error.message)?"Adresse e-mail ou mot de passe incorrect.":"Connexion impossible : "+r.error.message)}};
+$("f-signup").onsubmit=async function(e){e.preventDefault();
+ var fn=$("s-fn").value.trim(),ln=$("s-ln").value.trim(),m=$("s-mail").value.trim(),p=$("s-pw").value;
+ if(!fn||!ln){say("m-signup","Indique ton prénom et ton nom.");return}
+ if(!mailOk(m)){say("m-signup","Cette adresse e-mail n’est pas valide.");return}
+ if(!pwOk(p)){say("m-signup",PWMSG);return}
+ if(p!==$("s-pw2").value){say("m-signup","Les deux mots de passe ne sont pas identiques.");return}
+ say("m-signup","Création du compte…",true);
+ var r=await sb.auth.signUp({email:m,password:p,options:{data:{first_name:fn,last_name:ln},emailRedirectTo:BACK}});
+ if(r.error){say("m-signup",/registered|exists/i.test(r.error.message)?"Cette adresse e-mail est déjà utilisée.":"Création impossible : "+r.error.message);return}
+ if(r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){say("m-signup","Cette adresse e-mail est déjà utilisée. Connecte-toi ou réinitialise ton mot de passe.");return}
+ if(!r.data.session){pane("notice");$("n-title").textContent="Vérifie ta boîte mail ✈️";
+  $("n-text").textContent="Ton compte est créé. Un e-mail de bienvenue contenant un lien sécurisé et temporaire vient de t’être envoyé : clique dessus pour activer ton compte, puis connecte-toi. Ton mot de passe n’est jamais envoyé par e-mail.";
+  $("n-btn").hidden=false;$("n-btn").textContent="Retour à la connexion";$("n-btn").onclick=function(){pane("login")}}};
+$("f-forgot").onsubmit=async function(e){e.preventDefault();
+ var m=$("f-mail").value.trim();if(!mailOk(m)){say("m-forgot","Cette adresse e-mail n’est pas valide.");return}
+ var r=await sb.auth.resetPasswordForEmail(m,{redirectTo:BACK});
+ if(r.error&&/rate|seconds/i.test(r.error.message)){say("m-forgot","Trop de demandes. Réessaie dans une minute.");return}
+ say("m-forgot","Si un compte existe pour cette adresse, un e-mail contenant un lien temporaire vient d’être envoyé.",true)};
+$("f-reset").onsubmit=async function(e){e.preventDefault();
+ var p=$("r-pw").value;if(!pwOk(p)){say("m-reset",PWMSG);return}
+ if(p!==$("r-pw2").value){say("m-reset","Les deux mots de passe ne sont pas identiques.");return}
+ var r=await sb.auth.updateUser({password:p});
+ if(r.error){say("m-reset",/expired|session/i.test(r.error.message)?"Ce lien a expiré. Refais une demande de réinitialisation.":"Modification impossible : "+r.error.message);return}
+ recovery=false;pane("notice");$("n-title").textContent="Mot de passe modifié";$("n-text").textContent="Votre mot de passe a été modifié avec succès.";
+ $("n-btn").hidden=false;$("n-btn").textContent="Accéder à mon espace";$("n-btn").onclick=function(){boot(r.data.user)}};
+
+sb.auth.onAuthStateChange(function(ev,session){setTimeout(function(){
+ if(ev==="PASSWORD_RECOVERY"){recovery=true;pane("reset");return}
+ if(ev==="SIGNED_OUT"){clearState();pane("login");return}
+ if(session&&!recovery){if(loaded!==session.user.id)boot(session.user)}
+ else if(!session){pane("login")}},0)});
+async function logout(){await sb.auth.signOut()}
+
+/* ---------- Interface ---------- */
+function go(v,c){view=v;cur=c||null;render();window.scrollTo(0,0)}
+function nav(){var t=[["dash","Tableau de bord"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
+ $("nav").innerHTML=t.map(function(a){return '<button data-v="'+a[0]+'"'+((view===a[0]||(view==="sub"&&a[0]==="dash"))?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
+ $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
+function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
+function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
+
+function dash(){
+ var t=st(fs()),fn=profile.first_name||(user.user_metadata||{}).first_name||"";
+ var h='<h1>Bonjour '+esc(fn)+' 👋</h1><p class="sub">Voici ton résumé de révision.</p>'+seg();
+ h+='<div class="tot"><div><b>'+dur(t.min)+'</b><span>Temps total</span></div><div><b>'+t.n+'</b><span>Séances</span></div><div><b>'+t.last+'</b><span>Dernière révision</span></div></div>';
+ ["ppl","spl"].forEach(function(k){if(filter!=="all"&&filter!==k)return;
+  var ct=st(sessions.filter(function(x){return by(x.s).cat===k}));
+  h+='<section class="cat '+k+'"><div class="hd"><h2>'+CAT[k].t+'</h2><p>'+CAT[k].s+' — '+dur(ct.min)+' · '+ct.n+' séances</p></div>';
+  S.filter(function(s){return s.cat===k}).forEach(function(s){var q=st(ofS(s.c));
+   h+='<button class="row" data-s="'+s.c+'"><span class="code">'+s.c+'</span><span>'+s.n+'</span><span class="n">'+dur(q.min)+'</span><small class="x n">'+q.n+' séances</small><small class="x n">'+q.last+'</small></button>'});
+  h+='</section>'});
+ var mx=Math.max.apply(null,[1].concat(S.map(function(s){return st(ofS(s.c)).min})));
+ h+='<section class="panel"><h2>Temps par matière</h2>';
+ S.forEach(function(s){if(filter!=="all"&&s.cat!==filter)return;var m=st(ofS(s.c)).min;h+='<div class="bar '+s.cat+'"><span>'+s.c+'</span><i style="width:'+(m/mx*100)+'%"></i><span>'+dur(m)+'</span></div>'});
+ h+='</section><section class="panel"><h2>8 dernières semaines</h2><div class="wk">';
+ var wk=[],d=new Date(now);d.setDate(d.getDate()-((d.getDay()+6)%7));d.setHours(0,0,0,0);
+ for(var i=7;i>=0;i--){var a=new Date(d);a.setDate(a.getDate()-i*7);var b=new Date(a);b.setDate(b.getDate()+7);
+  var m=fs().filter(function(x){return x.date>=iso(a)&&x.date<iso(b)}).reduce(function(s,x){return s+x.min},0);wk.push([a,m])}
+ var wm=Math.max.apply(null,[1].concat(wk.map(function(w){return w[1]})));
+ wk.forEach(function(w){h+='<div><span>'+Math.round(w[1]/60*10)/10+'h</span><i style="height:'+(w[1]/wm*85)+'%"></i><span>'+String(w[0].getDate()).padStart(2,"0")+"/"+String(w[0].getMonth()+1).padStart(2,"0")+'</span></div>'});
+ $("main").innerHTML=h+'</div></section>';bindSeg();
+ document.querySelectorAll("[data-s]").forEach(function(b){b.onclick=function(){go("sub",b.dataset.s)}})}
+
+function logList(list){var l=list.slice().sort(function(a,b){return a.date<b.date?1:-1});
+ if(!l.length)return '<p class="hint">Aucune séance pour le moment.</p>';
+ return '<ul class="log">'+l.map(function(x){var s=by(x.s);return '<li><span><span class="tag2 '+s.cat+'">'+s.c+'</span> '+fd(x.date)+' — '+dur(x.min)+(x.note?' · '+esc(x.note):'')+'</span><button data-d="'+x.id+'">Supprimer</button></li>'}).join("")+'</ul>'}
+function bindDel(){document.querySelectorAll("[data-d]").forEach(function(b){b.onclick=async function(){
+ var r=await sb.from("sessions").delete().eq("id",b.dataset.d);if(r.error){alert("Suppression impossible : "+r.error.message);return}
+ sessions=sessions.filter(function(x){return x.id!==b.dataset.d});render()}})}
+
+function sub(){var s=by(cur),q=st(ofS(cur)),g=goals[cur]||0,h='<p><button class="btn alt" id="back">← Tableau de bord</button></p>';
+ h+='<h1>'+(cur==="050"?"🌦️ ":"")+s.c+' — '+s.n+'</h1><p class="sub"><span class="tag2 '+s.cat+'">'+CAT[s.cat].lab+'</span></p>';
+ h+='<section class="panel"><div class="tot" style="margin:0"><div><b>'+dur(q.min)+'</b><span>⏱️ Temps total révisé</span></div><div><b>'+q.n+'</b><span>📚 Séances</span></div><div><b>'+q.last+'</b><span>📅 Dernière révision</span></div></div></section>';
+ if(cur==="050"){var ql=profile.quizlet_link;h+='<section class="panel quizlet"><h2>🧠 Mes flashcards Quizlet</h2><p class="hint">'+(ql?'Votre jeu s’ouvre dans un nouvel onglet.':'Aucun lien enregistré. Ajoutez-le dans les paramètres.')+'</p>'+
+  (ql?'<a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(ql)+'">📚 Ouvrir mes flashcards Quizlet</a>':'<button class="btn alt" id="toset">Ajouter mon lien dans les paramètres</button>')+'</section>'}
+ var pct=g?Math.min(100,q.min/(g*60)*100):0;
+ h+='<section class="panel '+s.cat+'"><h2>🎯 Objectif</h2><div class="grid"><div><label for="g">Objectif en heures</label><input id="g" type="number" min="0" max="2000" step="0.5" value="'+(g||"")+'"></div><div><button class="btn" id="gs">Enregistrer l’objectif</button></div></div><p class="msg" id="m-g" role="status"></p>'+
+  (g?'<div class="bar" style="grid-template-columns:1fr 60px"><span style="background:var(--line);border-radius:3px;display:block"><i style="width:'+pct+'%"></i></span><span>'+Math.round(pct)+' %</span></div>':'')+'</section>';
+ h+='<section class="panel"><h2>Historique</h2>'+logList(ofS(cur))+'</section>';
+ $("main").innerHTML=h;bindDel();$("back").onclick=function(){go("dash")};if($("toset"))$("toset").onclick=function(){go("set")};
+ $("gs").onclick=async function(){var v=parseFloat($("g").value)||0;
+  var r=await sb.from("goals").upsert({user_id:user.id,subject:cur,hours:v},{onConflict:"user_id,subject"});
+  if(r.error){fail("m-g",r.error);return}goals[cur]=v;render()}}
+
+function add(){var opts=["ppl","spl"].map(function(k){return '<optgroup label="'+CAT[k].t+'">'+S.filter(function(s){return s.cat===k}).map(function(s){return '<option value="'+s.c+'">'+s.c+' — '+s.n+'</option>'}).join("")+'</optgroup>'}).join("");
+ $("main").innerHTML='<h1>Séances</h1><p class="sub">Ajouter une séance de révision</p><section class="panel"><div class="grid"><div><label for="a-s">Matière</label><select id="a-s">'+opts+'</select></div><div><label for="a-d">Date</label><input id="a-d" type="date" value="'+iso(now)+'"></div><div><label for="a-m">Durée (min)</label><input id="a-m" type="number" min="1" max="600" placeholder="45"></div><div><label for="a-n">Note</label><input id="a-n" maxlength="80"></div></div><p><button class="btn" id="a-b">Ajouter la séance</button></p><p class="msg" id="a-msg" role="status"></p></section>'+seg()+'<section class="panel"><h2>Historique</h2>'+logList(fs())+'</section>';
+ bindSeg();bindDel();
+ $("a-b").onclick=async function(){var m=parseInt($("a-m").value,10),d=$("a-d").value,sj=$("a-s").value,n=$("a-n").value.trim();
+  if(!d||!(m>0&&m<=600)){say("a-msg","Indique une date et une durée entre 1 et 600 minutes.");return}
+  var r=await sb.from("sessions").insert({session_date:d,minutes:m,subject:sj,note:n||null}).select().single();
+  if(r.error){fail("a-msg",r.error);return}
+  sessions.push({id:r.data.id,date:d,min:m,s:sj,note:n});render();say("a-msg","Séance ajoutée.",true)}}
+
+function cal(){var y=cm.getFullYear(),mo=cm.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),l=fs(),
+ h='<h1>Calendrier</h1>'+seg()+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
+ ["L","M","M","J","V","S","D"].forEach(function(d){h+='<div class="h">'+d+'</div>'});
+ for(var i=0;i<first;i++)h+='<div></div>';
+ for(var d=1;d<=dim;d++){var k=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),m=l.filter(function(x){return x.date===k}).reduce(function(a,x){return a+x.min},0);h+='<div'+(m?' class="on"':'')+'>'+d+(m?'<b>'+dur(m)+'</b>':'')+'</div>'}
+ $("main").innerHTML=h+'</div></section>';bindSeg();
+ $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()}}
+
+function profileV(){
+ $("main").innerHTML='<h1>Mon profil</h1><section class="panel"><div class="grid"><div><label for="p-fn">Prénom</label><input id="p-fn" maxlength="60" value="'+esc(profile.first_name)+'"></div><div><label for="p-ln">Nom</label><input id="p-ln" maxlength="60" value="'+esc(profile.last_name)+'"></div></div>'+
+ '<p class="hint">Compte créé le '+new Date(user.created_at).toLocaleDateString("fr-CH")+'</p><p><button class="btn" id="p-save">Enregistrer</button></p><p class="msg" id="m-p" role="status"></p></section>'+
+ '<section class="panel"><h2>Adresse e-mail</h2><p>'+esc(user.email)+'</p><label for="p-mail">Nouvelle adresse</label><input id="p-mail" type="email" autocomplete="email"><p class="hint">Un lien de vérification est envoyé à la nouvelle adresse.</p><p><button class="btn alt" id="p-mb">Modifier l’adresse e-mail</button></p><p class="msg" id="m-pm" role="status"></p></section>'+
+ '<section class="panel"><h2>Modifier mon mot de passe</h2><div class="grid"><div><label for="p-pw">Nouveau mot de passe</label><input id="p-pw" type="password" autocomplete="new-password"></div><div><label for="p-pw2">Confirmation</label><input id="p-pw2" type="password" autocomplete="new-password"></div></div><p><button class="btn alt" id="p-pb">Modifier mon mot de passe</button></p><p class="msg" id="m-pp" role="status"></p></section>'+
+ '<p><button class="btn alt" id="p-out">Se déconnecter</button></p>';
+ $("p-save").onclick=async function(){var fn=$("p-fn").value.trim(),ln=$("p-ln").value.trim();if(!fn||!ln){say("m-p","Indique ton prénom et ton nom.");return}
+  var r=await sb.from("profiles").update({first_name:fn,last_name:ln}).eq("id",user.id);if(r.error){fail("m-p",r.error);return}
+  profile.first_name=fn;profile.last_name=ln;say("m-p","Profil enregistré.",true)};
+ $("p-mb").onclick=async function(){var m=$("p-mail").value.trim();if(!mailOk(m)){say("m-pm","Cette adresse e-mail n’est pas valide.");return}
+  var r=await sb.auth.updateUser({email:m},{emailRedirectTo:BACK});if(r.error){fail("m-pm",r.error);return}say("m-pm","Un lien de vérification a été envoyé. L’adresse changera après confirmation.",true)};
+ $("p-pb").onclick=async function(){var p=$("p-pw").value;if(!pwOk(p)){say("m-pp",PWMSG);return}if(p!==$("p-pw2").value){say("m-pp","Les deux mots de passe ne sont pas identiques.");return}
+  var r=await sb.auth.updateUser({password:p});if(r.error){fail("m-pp",r.error);return}$("p-pw").value=$("p-pw2").value="";say("m-pp","Votre mot de passe a été modifié avec succès.",true)};
+ $("p-out").onclick=logout}
+
+function setv(){$("main").innerHTML='<h1>Paramètres</h1><section class="panel"><h2>🧠 Flashcards Quizlet — 050</h2><label for="ql">Lien de mes flashcards Quizlet 050</label><input id="ql" type="url" placeholder="https://quizlet.com/…" value="'+esc(profile.quizlet_link||"")+'"><p><button class="btn" id="qs">Enregistrer le lien</button> <button class="btn alt" id="qc">Supprimer le lien</button></p><p class="msg" id="qm" role="status"></p></section><section class="panel"><h2>Compte</h2><button class="btn alt" id="so">Se déconnecter</button></section>';
+ $("so").onclick=logout;
+ async function saveLink(v,msg){var r=await sb.from("profiles").update({quizlet_link:v}).eq("id",user.id);if(r.error){fail("qm",r.error);return}profile.quizlet_link=v;say("qm",msg,true)}
+ $("qs").onclick=function(){var v=$("ql").value.trim();if(!v){say("qm","Collez d’abord le lien de votre jeu Quizlet.");return}
+  if(!/^https?:\/\//i.test(v))v="https://"+v;var u;try{u=new URL(v)}catch(e){say("qm","Ce lien n’est pas valide.");return}
+  if(!/(^|\.)quizlet\.com$/i.test(u.hostname)){say("qm","Le lien doit venir de quizlet.com.");return}
+  u.protocol="https:";$("ql").value=u.href;saveLink(u.href,"Lien enregistré. Il est disponible sur la page 050 — Météorologie.")};
+ $("qc").onclick=function(){$("ql").value="";saveLink(null,"Lien supprimé.")}}
+
+function render(){if(!user)return;nav();({dash:dash,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+})();
+</script>
+</body>
+</html>
