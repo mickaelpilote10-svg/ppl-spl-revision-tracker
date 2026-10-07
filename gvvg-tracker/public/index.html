@@ -107,7 +107,6 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
 .exam-card{border-left:5px solid var(--warm)}.exam-card h2{margin-bottom:8px}.exam-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}.exam-details div{padding:10px 12px;border-radius:8px;background:var(--bg)}.exam-details b{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}.exam-details span{font-weight:700}.exam-note{margin:12px 0 0;color:var(--muted);font-size:.9rem}
-.exam-result-list{display:grid;gap:14px}.exam-result-card{border-left:5px solid var(--ppl)}.exam-result-card h2{margin-bottom:6px}.exam-result-card .grid{margin-top:12px}.exam-result-card textarea{width:100%;min-height:90px;resize:vertical;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}.exam-result-done{border-left:5px solid var(--ok);padding:12px 14px;border-radius:8px;background:color-mix(in srgb,var(--ok) 8%,var(--surface))}
 footer{max-width:860px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;color:var(--muted);font-size:.88rem}
 footer b{color:var(--ink)}
 </style>
@@ -339,50 +338,16 @@ var blankExams=[
   {date:"2027-02-01",branches:"020 / 040",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"},
   {date:"2027-03-29",branches:"030 / 090",duration:"3 h",instructors:"P. Robatel · L. Pratley",location:"Aérodrome régional de Fribourg-Écuvillens"}
  ];
- var examBranchNames={"010":"Droit aérien","020":"Connaissance générale des aéronefs","030":"Préparation du vol et performances","040":"Performances humaines","050":"Météorologie","060-1":"Navigation générale","060-2":"Radionavigation","070":"Procédures opérationnelles","080":"Principes du vol","090":"Communications"};
- function examPdfKey(date){return "exam-result-pdf:"+user.id+":"+date}
- function examPdfWasDownloaded(date){try{return localStorage.getItem(examPdfKey(date))==="1"}catch(e){return false}}
- function examResultCard(exam){
-  if(examPdfWasDownloaded(exam.date))return '<section class="panel exam-result-done" aria-live="polite"><b>✓ Résultat téléchargé — '+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+'</b><p class="hint">Le PDF contient uniquement cet examen. Les notes et le fichier ne sont pas conservés sur le site.</p></section>';
-  var codes=exam.branches.split(" / ");
-  return '<section class="panel exam-result-card" data-exam-result-card="'+exam.date+'"><h2>📄 Résultat — examen blanc du '+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+'</h2><p class="hint">Saisis les résultats de cet examen seulement. Ils ne seront pas mélangés avec ceux des examens précédents.</p><div class="grid">'+codes.map(function(code){return '<div><label for="score-'+exam.date+'-'+code+'">'+code+' — '+esc(examBranchNames[code]||code)+'</label><input id="score-'+exam.date+'-'+code+'" type="text" maxlength="40" data-branch-score="'+code+'" placeholder="Ex. 18/25 ou 72 %"></div>'}).join("")+'</div><p><label for="note-'+exam.date+'">Remarque (facultative)</label><textarea id="note-'+exam.date+'" maxlength="600" data-exam-note placeholder="Ajoute un commentaire ou un conseil à retenir."></textarea></p><p class="hint">Le PDF téléchargé sera celui de cet examen uniquement. Le site n’archive pas tes notes ni le PDF.</p><p><button class="btn" type="button" data-download-exam="'+exam.date+'">Télécharger le résultat</button></p><p class="msg" id="msg-'+exam.date+'" role="status"></p></section>'
- }
- function downloadExamPdf(exam,card){
-  var PDF=window.jspdf&&window.jspdf.jsPDF;
-  if(!PDF){say("msg-"+exam.date,"Le générateur PDF est indisponible. Vérifie ta connexion Internet puis réessaie.");return}
-  var scores=Array.from(card.querySelectorAll("[data-branch-score]")).map(function(input){return{code:input.dataset.branchScore,name:examBranchNames[input.dataset.branchScore]||input.dataset.branchScore,value:input.value.trim()}}).filter(function(x){return x.value});
-  var note=card.querySelector("[data-exam-note]").value.trim();
-  if(!scores.length&&!note){say("msg-"+exam.date,"Ajoute au moins un résultat ou une remarque avant de télécharger.");return}
-  var doc=new PDF({unit:"mm",format:"a4"}),y=22;
-  doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("Résultat d’examen blanc",15,y);y+=13;
-  doc.setFont("helvetica","normal");doc.setFontSize(11);
-  var person=[profile.first_name,profile.last_name].filter(Boolean).join(" ");
-  if(person){doc.text("Élève : "+person,15,y);y+=8}
-  doc.text("Date : "+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"}),15,y);y+=8;
-  doc.text(doc.splitTextToSize("Lieu : "+exam.location,180),15,y);y+=8;
-  doc.text("Branches : "+exam.branches,15,y);y+=8;
-  doc.text(doc.splitTextToSize("Durée prévue : "+exam.duration+" · Instructeurs : "+exam.instructors,180),15,y);y+=12;
-  doc.setFont("helvetica","bold");doc.text("Résultats de cet examen",15,y);y+=8;doc.setFont("helvetica","normal");
-  if(scores.length)scores.forEach(function(x){doc.text(doc.splitTextToSize(x.code+" — "+x.name+" : "+x.value,180),18,y);y+=7});
-  else{doc.text("Aucun score détaillé saisi.",18,y);y+=7}
-  if(note){y+=4;doc.setFont("helvetica","bold");doc.text("Remarque",15,y);y+=7;doc.setFont("helvetica","normal");doc.text(doc.splitTextToSize(note,180),18,y)}
-  doc.save("Resultat_examen_blanc_"+exam.date+".pdf");
-  try{localStorage.setItem(examPdfKey(exam.date),"1")}catch(e){}
-  card.className="exam-result-done";card.innerHTML="<b>✓ PDF téléchargé</b><p>Ce fichier contient uniquement les résultats de l’examen du "+new Date(exam.date+"T00:00:00").toLocaleDateString("fr-CH")+". Ni les notes ni le PDF ne sont conservés sur le site.</p>";
- }
- function bindExamResults(){document.querySelectorAll("[data-download-exam]").forEach(function(button){button.onclick=function(){var exam=blankExams.filter(function(x){return x.date===button.dataset.downloadExam})[0],card=button.closest("[data-exam-result-card]");if(exam&&card)downloadExamPdf(exam,card)}})}
  function cal(){var y=cm.getFullYear(),mo=cm.getMonth(),first=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),l=fs();
   var today=new Date();today.setHours(0,0,0,0);
   var upcoming=blankExams.filter(function(x){return new Date(x.date+"T00:00:00")>=today}).sort(function(a,b){return a.date<b.date?-1:1})[0];
   var exam=upcoming?'<section class="panel exam-card"><h2>📝 Prochain examen à blanc à venir</h2><div class="exam-details"><div><b>Date</b><span>'+new Date(upcoming.date+"T00:00:00").toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</span></div><div><b>Lieu</b><span>'+esc(upcoming.location)+'</span></div><div><b>Branches évaluées</b><span>'+esc(upcoming.branches)+'</span></div><div><b>Durée · Instructeurs</b><span>'+esc(upcoming.duration)+' · '+esc(upcoming.instructors)+'</span></div></div><p class="exam-note">Le programme distingue deux sites : Aérodrome régional de Fribourg-Écuvillens (LSGE) et Aérodrome de la Gruyère (LSGT).</p></section>':'<section class="panel exam-card"><h2>📝 Examens à blanc</h2><p class="hint">Il n’y a plus d’examen à blanc à venir dans le programme fourni.</p></section>';
-  var pastExams=blankExams.filter(function(x){return new Date(x.date+"T00:00:00")<=today});
-  var results=pastExams.length?'<h2>Résultats des examens terminés</h2><p class="sub">Chaque PDF contient uniquement le résultat de l’examen sélectionné.</p><div class="exam-result-list">'+pastExams.map(examResultCard).join("")+'</div>':"";
-  var h='<h1>Calendrier</h1>'+seg()+exam+results+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
+  var h='<h1>Calendrier</h1>'+seg()+exam+'<section class="panel"><p><button class="btn alt" id="pv" aria-label="Mois précédent">‹</button> <b>'+cm.toLocaleDateString("fr-CH",{month:"long",year:"numeric"})+'</b> <button class="btn alt" id="nx" aria-label="Mois suivant">›</button></p><div class="cal">';
   ["L","M","M","J","V","S","D"].forEach(function(d){h+='<div class="h">'+d+'</div>'});
   for(var i=0;i<first;i++)h+='<div></div>';
   for(var d=1;d<=dim;d++){var k=y+"-"+String(mo+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),m=l.filter(function(x){return x.date===k}).reduce(function(a,x){return a+x.min},0);h+='<div'+(m?' class="on"':'')+'>'+d+(m?'<b>'+dur(m)+'</b>':'')+'</div>'}
   $("main").innerHTML=h+'</div></section>';bindSeg();
-  $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()};bindExamResults()}
+  $("pv").onclick=function(){cm=new Date(y,mo-1,1);render()};$("nx").onclick=function(){cm=new Date(y,mo+1,1);render()}}
 
 function profileV(){
  $("main").innerHTML='<h1>Mon profil</h1><section class="panel"><div class="grid"><div><label for="p-fn">Prénom</label><input id="p-fn" maxlength="60" value="'+esc(profile.first_name)+'"></div><div><label for="p-ln">Nom</label><input id="p-ln" maxlength="60" value="'+esc(profile.last_name)+'"></div></div>'+
@@ -444,19 +409,34 @@ var quizBank=[
  {question:"Qu’est-ce qu’une goutte froide selon la fiche ?",options:["Une poche d’air froid isolée en altitude, souvent visible sur une carte 500 hPa.","Un front froid stationnaire au niveau du sol.","Une masse d’air maritime qui se réchauffe en descendant.","Une zone de pluie indiquant forcément un front chaud."],correct:0,explanation:"Une goutte froide est une poche d’air froid isolée en altitude, souvent visible sur une carte 500 hPa. Elle peut provoquer un temps perturbé difficile à prévoir."},
  {question:"Quelle association sur les anticyclones est correcte ?",options:["Dynamique = descente de l’air ; thermique = air froid dense favorisant une pression élevée.","Dynamique = air froid au sol ; thermique = jet-stream en altitude.","Dynamique = front chaud ; thermique = front froid.","Les deux sont dus uniquement à la convergence au sol."],correct:0,explanation:"L’anticyclone dynamique est lié à la subsidence, donc à la descente de l’air. L’anticyclone thermique est favorisé par la densité de l’air froid et une pression élevée."}
 ];
-var quizRun=[],quizStep=0,quizScore=0,quizPick=null,quizResult=false,quizPicks=[],ficheTargetAnchor=null,quizReviewReturn=false;
+var quizRun=[],quizStep=0,quizScore=0,quizPick=null,quizResult=false,quizPicks=[],ficheTargetAnchor=null,quizReviewReturn=false,quizFinishedAt=null;
 function quizShuffle(items){var a=items.slice();for(var i=0;i<a.length-1;i++){var j=i+Math.floor(Math.random()*(a.length-i)),t=a[i];a[i]=a[j];a[j]=t}return a}
 var quizAnchors={"Quand on monte en altitude, que devient la pression atmosphérique ?":"pression-altitude","Quel réglage permet de lire l’altitude par rapport au niveau moyen de la mer ?":"qnh-qfe-qff","Dans cette fiche, à quoi sert surtout le QFF ?":"qnh-qfe-qff","Quelle proposition distingue correctement isobares et isohypses ?":"cartes-isobares-isohypses","Un « vent du nord » est nommé ainsi parce qu’il…":"direction-vent","Sur une carte, quelle valeur correspond au triangle plein d’une barbule ?":"barbules-vent","Quel effet les frottements près du sol ont-ils sur le vent ?":"frottements-vent","Quel code décrit une masse d’air polaire maritime ?":"masses-air","À vapeur d’eau réelle inchangée, que se passe-t-il si l’air se réchauffe ?":"humidite-relative","Que désigne le point de rosée ?":"point-rosee","Une transformation adiabatique se fait…":"transformation-adiabatique","Quels repères de refroidissement la fiche donne-t-elle ?":"refroidissement-air","Qu’est-ce qui permet à la vapeur d’eau de se condenser en gouttelettes ou cristaux ?":"noyaux-condensation","Quelle association de couverture nuageuse est correcte ?":"couverture-nuageuse","Quelle différence décrit le mieux les fronts chaud et froid ?":"fronts-chaud-froid","Comment se forme une occlusion ?":"formation-occlusion","Quel repère distingue les deux types d’occlusion dans la fiche ?":"types-occlusion","Lors d’un foehn du sud, quel enchaînement est décrit ?":"foehn-sud","Qu’est-ce qu’une goutte froide selon la fiche ?":"goutte-froide","Quelle association sur les anticyclones est correcte ?":"anticyclones"};
-function startQuiz(){quizRun=quizShuffle(quizBank.map(function(q){return{question:q.question,options:quizShuffle(q.options.map(function(text,i){return{text:text,correct:i===q.correct}})),explanation:q.explanation,anchor:quizAnchors[q.question]}}));quizStep=0;quizScore=0;quizPick=null;quizPicks=[];quizResult=false;ficheTargetAnchor=null;quizReviewReturn=false;go("quiz","050")}
+function startQuiz(){quizRun=quizShuffle(quizBank.map(function(q){return{question:q.question,options:quizShuffle(q.options.map(function(text,i){return{text:text,correct:i===q.correct}})),explanation:q.explanation,anchor:quizAnchors[q.question]}}));quizStep=0;quizScore=0;quizPick=null;quizPicks=[];quizResult=false;ficheTargetAnchor=null;quizReviewReturn=false;quizFinishedAt=null;go("quiz","050")}
 function quizBack(){quizReviewReturn=false;go("fiche","050")}
+function downloadQuizResultPdf(){
+ var PDF=window.jspdf&&window.jspdf.jsPDF;
+ if(!PDF){say("qpdf-msg","Le téléchargement PDF est indisponible. Vérifie ta connexion Internet puis réessaie.");return}
+ var finished=quizFinishedAt||new Date(),doc=new PDF({unit:"mm",format:"a4"}),y=24;
+ doc.setFont("helvetica","bold");doc.setFontSize(20);doc.text("Résultat du QCM",15,y);y+=16;
+ doc.setFont("helvetica","normal");doc.setFontSize(13);
+ doc.text("Score : "+quizScore+" / "+quizRun.length,15,y);y+=10;
+ doc.text("Branche : 050 — Météorologie",15,y);y+=10;
+ doc.text("Date : "+finished.toLocaleDateString("fr-CH"),15,y);y+=10;
+ doc.text("Heure : "+finished.toLocaleTimeString("fr-CH"),15,y);y+=14;
+ doc.setFontSize(10);doc.text("Résultat de cette tentative uniquement.",15,y);
+ var stamp=finished.getFullYear()+String(finished.getMonth()+1).padStart(2,"0")+String(finished.getDate()).padStart(2,"0")+"_"+String(finished.getHours()).padStart(2,"0")+String(finished.getMinutes()).padStart(2,"0");
+ doc.save("Resultat_QCM_050_"+stamp+".pdf");
+}
 function quizView(){
  if(cur!=="050"||!quizRun.length){go("fiches");return}
  if(quizResult){
   var pct=Math.round(quizScore/quizRun.length*100),label=pct===100?"Parfait, aucune confusion !":pct>=75?"Très bon travail, les nuances sont bien comprises.":pct>=50?"Bon début : relis les explications des erreurs puis réessaie.":"Relis la fiche et refais le QCM : les pièges portent sur des notions proches.";
   var wrong=quizRun.map(function(q,i){return{q:q,pick:quizPicks[i]}}).filter(function(x){return x.pick!==undefined&&!x.q.options[x.pick].correct});
   var review=wrong.length?'<section class="panel"><h2>Questions fausses à revoir ('+wrong.length+')</h2><div class="qcm-review-list">'+wrong.map(function(x){var good=x.q.options.filter(function(o){return o.correct})[0];return '<article class="qcm-review-item"><h3>'+esc(x.q.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.q.options[x.pick].text)+'</p><p><b>Bonne réponse :</b> '+esc(good.text)+'</p><p class="qcm-explanation">'+esc(x.q.explanation)+'</p><button class="btn alt" data-review-anchor="'+esc(x.q.anchor)+'">Aller vers l’explication →</button></article>'}).join("")+'</div></section>':'<section class="panel"><h2>Questions à revoir</h2><p class="hint">Aucune réponse fausse : bravo !</p></section>';
-  $("main").innerHTML='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>Résultat du QCM</h1><section class="panel qcm-result"><p class="qcm-score">'+quizScore+' / '+quizRun.length+'</p><p class="sub">'+pct+' % de bonnes réponses</p><p>'+label+'</p><div class="qcm-actions"><button class="btn" id="quiz-again">Refaire le QCM</button></div></section>'+review;
-  $("quiz-back").onclick=quizBack;$("quiz-again").onclick=startQuiz;document.querySelectorAll("[data-review-anchor]").forEach(function(b){b.onclick=function(){ficheTargetAnchor=b.dataset.reviewAnchor;quizReviewReturn=true;go("fiche","050")}});return
+  var finished=quizFinishedAt||new Date();
+  $("main").innerHTML='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>Résultat du QCM</h1><section class="panel qcm-result"><p class="qcm-score">'+quizScore+' / '+quizRun.length+'</p><p class="sub">'+pct+' % de bonnes réponses</p><p>'+label+'</p><p class="hint">Date et heure : <b>'+finished.toLocaleString("fr-CH")+'</b><br>Branche : <b>050 — Météorologie</b></p><div class="qcm-actions"><button class="btn" id="quiz-again">Refaire le QCM</button><button class="btn alt" id="quiz-download">Télécharger le résultat</button></div><p class="msg" id="qpdf-msg" role="status"></p></section>'+review;
+  $("quiz-back").onclick=quizBack;$("quiz-again").onclick=startQuiz;$("quiz-download").onclick=downloadQuizResultPdf;document.querySelectorAll("[data-review-anchor]").forEach(function(b){b.onclick=function(){ficheTargetAnchor=b.dataset.reviewAnchor;quizReviewReturn=true;go("fiche","050")}});return
  }
  var q=quizRun[quizStep],correctIndex=q.options.findIndex(function(o){return o.correct}),answered=quizPick!==null,isCorrect=answered&&q.options[quizPick].correct;
  var html='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>QCM Météorologie 050</h1><p class="sub">Choisis une seule réponse. Les questions sont mélangées à chaque partie.</p><section class="panel qcm-panel"><div class="qcm-progress"><b>Question '+(quizStep+1)+' / '+quizRun.length+'</b><b>Score : '+quizScore+'</b></div><div class="qcm-meter" role="progressbar" aria-valuemin="0" aria-valuemax="'+quizRun.length+'" aria-valuenow="'+quizStep+'"><i style="width:'+Math.round(quizStep/quizRun.length*100)+'%"></i></div><h2 class="qcm-question">'+esc(q.question)+'</h2><div class="qcm-choices">';
@@ -465,7 +445,7 @@ function quizView(){
  if(answered){var feedback=isCorrect?'<strong>✓ Juste !</strong><p>Bonne réponse.</p>':'<strong>✗ Faux. La bonne réponse est :</strong><p>'+esc(q.options[correctIndex].text)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p>';html+='<div class="qcm-feedback '+(isCorrect?"correct":"incorrect")+'" role="status" aria-live="polite">'+feedback+'</div><div class="qcm-actions"><button class="btn" id="quiz-next">'+(quizStep===quizRun.length-1?"Voir mon résultat":"Question suivante →")+'</button></div>'}
  html+='</section>';$("main").innerHTML=html;$("quiz-back").onclick=quizBack;
  if(!answered)document.querySelectorAll("[data-answer]").forEach(function(b){b.onclick=function(){quizPick=parseInt(b.dataset.answer,10);quizPicks[quizStep]=quizPick;if(q.options[quizPick].correct)quizScore++;quizView()}});
- if(answered)$("quiz-next").onclick=function(){if(quizStep===quizRun.length-1){quizResult=true}else{quizStep++;quizPick=null}quizView()}
+ if(answered)$("quiz-next").onclick=function(){if(quizStep===quizRun.length-1){quizFinishedAt=new Date();quizResult=true}else{quizStep++;quizPick=null}quizView()}
 }
 function chronoFormat(ms){var total=Math.floor(Math.max(0,ms)/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(function(x){return String(x).padStart(2,"0")}).join(":")}
 function chronoCurrent(){return chronoElapsed+(chronoStartedAt===null?0:Date.now()-chronoStartedAt)}
