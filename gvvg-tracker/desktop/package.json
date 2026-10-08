@@ -1,0 +1,38 @@
+{
+  "name": "ppl-spl-revision-tracker-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Windows app wrapper for PPL(A) / SPL Revision Tracker",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.17.0"
+  },
+  "build": {
+    "appId": "ch.ppltracker.desktop",
+    "productName": "PPL SPL Revision Tracker",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "PPL-SPL-Revision-Tracker-${version}-x64.${ext}"
+    }
+  }
+}
