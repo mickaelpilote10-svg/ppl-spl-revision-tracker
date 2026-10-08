@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build desktop installers
 
 on:
   push:
@@ -28,13 +28,41 @@ jobs:
       - name: Install app packaging tools
         run: npm install --no-audit --no-fund
 
-      - name: Create portable EXE
+      - name: Create Windows installer
         run: npm run build:win
 
-      - name: Save the EXE as a downloadable artifact
+      - name: Save the Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: PPL-SPL-Revision-Tracker-Windows
           path: gvvg-tracker/desktop/release/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: gvvg-tracker/desktop
+    steps:
+      - name: Get the project
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install app packaging tools
+        run: npm install --no-audit --no-fund
+
+      - name: Create macOS disk images
+        run: npm run build:mac
+
+      - name: Save the macOS installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: PPL-SPL-Revision-Tracker-macOS
+          path: gvvg-tracker/desktop/release/*.dmg
           if-no-files-found: error
           retention-days: 30

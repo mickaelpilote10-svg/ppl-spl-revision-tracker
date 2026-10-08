@@ -2,11 +2,12 @@
   "name": "ppl-spl-revision-tracker-desktop",
   "version": "1.0.0",
   "private": true,
-  "description": "Windows app wrapper for PPL(A) / SPL Revision Tracker",
+  "description": "Windows and macOS app wrapper for PPL(A) / SPL Revision Tracker",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win nsis --x64"
+    "build:win": "electron-builder --win nsis --x64",
+    "build:mac": "electron-builder --mac dmg --x64 && electron-builder --mac dmg --arm64"
   },
   "devDependencies": {
     "electron": "^44.0.0",
@@ -20,7 +21,8 @@
     },
     "files": [
       "main.cjs",
-      "assets/app-icon.ico"
+      "assets/app-icon.ico",
+      "assets/app-icon.icns"
     ],
     "win": {
       "icon": "assets/app-icon.ico",
@@ -39,6 +41,15 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "PPL SPL Revision Tracker"
+    },
+    "mac": {
+      "icon": "assets/app-icon.icns",
+      "target": [
+        "dmg"
+      ]
+    },
+    "dmg": {
+      "artifactName": "PPL-SPL-Revision-Tracker-${version}-${arch}.${ext}"
     },
     "artifactName": "PPL-SPL-Revision-Tracker-${version}-Setup.${ext}"
   }
