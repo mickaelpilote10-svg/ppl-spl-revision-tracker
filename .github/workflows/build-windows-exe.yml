@@ -1,0 +1,40 @@
+name: Build Windows EXE
+
+on:
+  push:
+    paths:
+      - "gvvg-tracker/desktop/**"
+      - ".github/workflows/build-windows-exe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: gvvg-tracker/desktop
+    steps:
+      - name: Get the project
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install app packaging tools
+        run: npm install --no-audit --no-fund
+
+      - name: Create portable EXE
+        run: npm run build:win
+
+      - name: Save the EXE as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PPL-SPL-Revision-Tracker-Windows
+          path: gvvg-tracker/desktop/release/*.exe
+          if-no-files-found: error
+          retention-days: 30
