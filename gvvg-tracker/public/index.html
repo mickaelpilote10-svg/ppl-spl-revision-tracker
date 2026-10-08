@@ -495,14 +495,31 @@ function understandingNorm(s){return String(s||"").toLowerCase().normalize("NFD"
 var understandingStop=("avec dans pour quand quel quelle quels quelles que quoi est sont une un des les la le du de d au aux par sur sous entre cela cette ces leur leurs peut doit être avoir faire donne donnees indique explique signifie represente selon votre reponse reponses atmosphere atmospherique meteo question").split(" ");
 var understandingSynonyms=[["diminue","baisse","decroit","diminution"],["augmente","hausse","croît","augmentation"],["temperature","thermique","chaud","froid"],["pression","qnh","qfe","qff"],["altitude","hauteur","niveau"],["vent","direction","souffle"],["nuage","nuageux","nebulosite"],["eau","goutte","humidite","vapeur"],["glace","cristal","givrage","surfusion"],["monte","ascendance","ascendant"],["descend","subsidence","descendance"],["condense","condensation","saturation"],["stable","stabilite"],["instable","instabilite"],["front","occlusion"],["pluie","averse","precipitation"],["visibilite","brouillard","brume"],["adiabatique","detente","compression"],["soleil","rayonnement","insolation"]];
 function understandingVariants(word){for(var i=0;i<understandingSynonyms.length;i++)if(understandingSynonyms[i].indexOf(word)>=0)return understandingSynonyms[i];return[word]}
+function understandingDistance(a,b){
+ if(a===b)return 0;
+ if(Math.abs(a.length-b.length)>2)return 3;
+ var row=[];for(var j=0;j<=b.length;j++)row[j]=j;
+ for(var i=1;i<=a.length;i++){var prev=row[0];row[0]=i;for(var k=1;k<=b.length;k++){var temp=row[k];row[k]=Math.min(row[k]+1,row[k-1]+1,prev+(a[i-1]===b[k-1]?0:1));prev=temp}}
+ return row[b.length]
+}
+function understandingWordMatch(expected,words){
+ var variants=understandingVariants(expected);
+ return variants.some(function(v){return words.some(function(w){
+  if(w===v)return true;
+  var common=0;while(common<Math.min(w.length,v.length)&&w[common]===v[common])common++;
+  if(common>=5)return true;
+  var limit=Math.max(w.length,v.length)>=9?2:1;
+  return Math.min(w.length,v.length)>=5&&understandingDistance(w,v)<=limit
+ })})
+}
 function assessUnderstanding(q,answer){
- var reference=(q.options[q.correct]||"")+" "+(q.explanation||"");
- var questionTerms=understandingNorm(q.question).split(" ");
- var terms=understandingNorm(reference).split(" ").filter(function(w){return w.length>=4&&understandingStop.indexOf(w)<0&&questionTerms.indexOf(w)<0});
+ var reference=understandingNorm(q.options[q.correct]||"");
+ var terms=reference.split(" ").filter(function(w){return w.length>=4&&understandingStop.indexOf(w)<0});
+ if(terms.length<2)terms=terms.concat(understandingNorm(q.explanation||"").split(" ").filter(function(w){return w.length>=4&&understandingStop.indexOf(w)<0}));
  var groups=[];terms.forEach(function(w){var v=understandingVariants(w).slice().sort().join("|");if(groups.indexOf(v)<0)groups.push(v)});
  var words=understandingNorm(answer).split(" ");
- var hits=groups.filter(function(g){return g.split("|").some(function(v){return words.indexOf(v)>=0})});
- var needed=Math.min(4,Math.max(2,Math.ceil(groups.length*0.35)));
+ var hits=groups.filter(function(g){return g.split("|").some(function(v){return understandingWordMatch(v,words)})});
+ var needed=Math.max(1,Math.ceil(groups.length*0.55));
  return{correct:hits.length>=needed,hits:hits.length,needed:needed,total:groups.length}
 }
 function understandingNext(){
@@ -515,7 +532,8 @@ function understandingView(){
  if(!q){var pct=Math.round(understandingScore/understandingRun.length*100),missed=understandingResults.filter(function(x){return!x.correct});$("main").innerHTML='<p><button class="btn alt" id="understanding-back">← Retour à Météorologie 050</button></p><h1>Résultat — Test de compréhension</h1><section class="panel"><p class="qcm-score">'+understandingScore+' / '+understandingRun.length+'</p><p>'+pct+' % de réponses reconnues comme suffisamment complètes.</p><p class="hint">Correction locale par mots-clés et synonymes : elle peut manquer une bonne paraphrase ou accepter une réponse trop courte. Vérifie les explications pour apprendre.</p><button class="btn" id="understanding-again">Recommencer</button></section>'+(missed.length?'<section class="panel"><h2>À revoir ('+missed.length+')</h2><div class="qcm-review-list">'+missed.map(function(x){return'<article class="qcm-review-item"><h3>'+esc(x.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.answer||"Aucune réponse")+'</p><p><b>Réponse de référence :</b> '+esc(x.expected)+'</p><p>'+esc(x.explanation)+'</p></article>'}).join("")+'</div></section>':'<section class="panel"><h2>Bravo !</h2><p>Toutes les réponses ont passé le repérage des notions clés.</p></section>');
  $("understanding-back").onclick=function(){go("fiche","050")};$("understanding-again").onclick=function(){startUnderstanding(understandingRun.length)};return}
  var expected=q.options[q.correct]||"";
- var feedback=understandingChecked?'<div class="qcm-feedback '+(understandingCorrect?"correct":"incorrect")+'" role="status" aria-live="polite"><strong>'+(understandingCorrect?"✓ Oui, les idées principales semblent correspondre.":"✗ Pas encore assez d’éléments reconnus.")+'</strong><p>Réponse de référence : '+esc(expected)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p></div>':'';
+ var answerLabel=String(q.source||"").indexOf("BAK")>=0?"Réponse officielle du BAK 050 : ":"Réponse correcte attendue : ";
+ var feedback=understandingChecked?'<div class="qcm-feedback '+(understandingCorrect?"correct":"incorrect")+'" role="status" aria-live="polite"><strong>'+(understandingCorrect?"✓ Oui, les idées principales correspondent, même si la formulation ou l’orthographe diffère.":"✗ Je n’ai pas reconnu assez d’idées clés dans ta réponse.")+'</strong><p>'+answerLabel+esc(expected)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p></div>':'';
  $("main").innerHTML='<p><button class="btn alt" id="understanding-back">← Retour à Météorologie 050</button></p><h1>Test de compréhension · 050</h1><p class="sub">Question '+(understandingIndex+1)+' / '+understandingRun.length+' · '+esc(q.source)+'</p><section class="panel qcm-panel"><div class="qcm-progress"><b>Question '+(understandingIndex+1)+' / '+understandingRun.length+'</b><b>Score : '+understandingScore+'</b></div><div class="qcm-meter"><i style="width:'+Math.round(understandingIndex/understandingRun.length*100)+'%"></i></div><h2 class="qcm-question">Explique avec tes mots : '+esc(q.question)+'</h2><label for="understanding-answer">Ta réponse</label><textarea id="understanding-answer" rows="5" style="width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px"'+(understandingChecked?" disabled":"")+'>'+esc(understandingAnswer)+'</textarea><div class="qcm-actions">'+(understandingChecked?'<button class="btn" id="understanding-next">'+(understandingIndex===understandingRun.length-1?"Voir le résultat":"Question suivante →")+'</button>':'<button class="btn" id="understanding-check">Vérifier ma réponse</button>')+'</div>'+feedback+'</section>';
  $("understanding-back").onclick=function(){go("fiche","050")};
  var input=$("understanding-answer");if(input&&!understandingChecked)input.oninput=function(){understandingAnswer=input.value};
