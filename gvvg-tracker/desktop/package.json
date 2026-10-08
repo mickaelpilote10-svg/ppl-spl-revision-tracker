@@ -6,7 +6,7 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-builder --win portable --x64"
+    "build:win": "electron-builder --win nsis --x64"
   },
   "devDependencies": {
     "electron": "^44.0.0",
@@ -26,15 +26,20 @@
       "icon": "assets/app-icon.ico",
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
         }
       ]
     },
-    "portable": {
-      "artifactName": "PPL-SPL-Revision-Tracker-${version}-x64.${ext}"
-    }
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PPL SPL Revision Tracker"
+    },
+    "artifactName": "PPL-SPL-Revision-Tracker-${version}-Setup.${ext}"
   }
 }
