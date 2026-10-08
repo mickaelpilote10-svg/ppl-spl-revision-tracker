@@ -51,6 +51,19 @@ h2{font:700 1.15rem/1.2 Georgia,serif;margin:0 0 10px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px;background:var(--surface)}
 .seg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:8px 14px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.dash-hero{position:relative;isolation:isolate;min-height:220px;display:flex;align-items:center;padding:clamp(22px,5vw,38px);margin:0 0 16px;overflow:hidden;border-radius:16px;color:#fff;background:linear-gradient(90deg,rgba(5,18,31,.92),rgba(5,18,31,.62)),url("assets/glider-timer.jpg") center 52%/cover no-repeat;box-shadow:0 12px 32px rgba(4,18,31,.16)}
+.dash-hero h1{color:#fff;font-size:clamp(1.8rem,4vw,2.5rem);margin:4px 0 8px}.dash-hero p{margin:0;color:#e1edf7}.dash-hero .dash-eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#aed7f8}
+.dash-hero-copy{max-width:600px}.dash-hero .btn{margin-top:18px;background:#fff;color:#10243a}.dash-hero .btn.alt{background:rgba(7,23,39,.25);color:#fff;border-color:rgba(255,255,255,.7)}
+.dash-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}.dash-kpi{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:14px 16px}.dash-kpi b{display:block;font:700 1.45rem/1.2 Georgia,serif}.dash-kpi span{color:var(--muted);font-size:.9rem}
+.dash-resume{display:flex;justify-content:space-between;align-items:center;gap:16px;border-left:5px solid var(--warm)}.dash-resume h2{margin-bottom:4px}.dash-resume p{margin:0}.dash-resume .btn{white-space:nowrap}
+.dash-subject-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;padding:12px}
+.dash-subject{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.dash-subject:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 7px 18px rgba(0,0,0,.09)}
+.dash-subject-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.dash-subject-code{font:700 1.05rem Georgia,serif;color:var(--c)}.dash-subject-name{font-weight:700}.dash-subject-meta{display:flex;justify-content:space-between;gap:8px;margin-top:10px;color:var(--muted);font-size:.82rem}
+.dash-progress{height:7px;overflow:hidden;border-radius:99px;background:var(--line);margin-top:8px}.dash-progress i{display:block;height:100%;background:var(--c);border-radius:99px}
+.dash-review{border-left:5px solid var(--err)}.dash-review h2{margin-bottom:5px}.dash-review p{margin:4px 0 10px}
+@media(max-width:560px){.dash-hero{min-height:190px;padding:22px}.dash-kpis{gap:7px}.dash-kpi{padding:11px 10px}.dash-kpi b{font-size:1.2rem}.dash-kpi span{font-size:.78rem}.dash-resume{align-items:flex-start;flex-direction:column}.dash-resume .btn{width:100%;text-align:center}.dash-subject-grid{grid-template-columns:1fr;padding:10px}}
+@media(prefers-reduced-motion:reduce){.dash-subject{transition:none}.dash-subject:hover{transform:none}}
 .tot{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:18px}
 .tot b{display:block;font:700 1.6rem/1.2 Georgia,serif}.tot span{color:var(--muted);font-size:.9rem}
 .cat{border:2px solid var(--c);border-radius:12px;margin-bottom:20px;background:var(--surface);overflow:hidden}
@@ -279,33 +292,50 @@ async function logout(){await sb.auth.signOut()}
 /* ---------- Interface ---------- */
 function go(v,c){if(v!=="fiche"&&v!=="quiz")quizReviewReturn=false;view=v;cur=c||null;render();window.scrollTo(0,0)}
 function nav(){var t=[["dash","Tableau de bord"],["fiches","Mes fiches de révisions"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
- $("nav").innerHTML=t.map(function(a){var current=view===a[0]||(view==="sub"&&a[0]==="dash")||((view==="fiche"||view==="quiz"||view==="understanding")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
+ $("nav").innerHTML=t.map(function(a){var current=view===a[0]||((view==="sub"||view==="dashReview")&&a[0]==="dash")||((view==="fiche"||view==="quiz"||view==="understanding")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
  $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
 function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
 
 function dash(){
- var t=st(fs()),fn=profile.first_name||(user.user_metadata||{}).first_name||"";
- var h='<h1>Bonjour '+esc(fn)+' 👋</h1><p class="sub">Voici ton résumé de révision.</p>'+seg();
- h+='<div class="tot"><div><b>'+dur(t.min)+'</b><span>Temps total</span></div><div><b>'+t.n+'</b><span>Séances</span></div><div><b>'+t.last+'</b><span>Dernière révision</span></div></div>';
+ var totals=st(fs()),fn=profile.first_name||(user.user_metadata||{}).first_name||"";
+ var lastSession=sessions.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"")})[0];
+ var quizRows=quizHistoryRead().slice().sort(function(a,b){return a.date.localeCompare(b.date)}),lastQuiz=quizRows[quizRows.length-1],lastReview=quizReviewRead();
+ var heroAction=lastSession?'<button class="btn" id="dash-resume">Reprendre '+esc(by(lastSession.s).n)+' →</button>':'<button class="btn" id="dash-resume">Choisir une matière →</button>';
+ var h='<section class="dash-hero"><div class="dash-hero-copy"><p class="dash-eyebrow">PPL(A) / SPL · ESPACE DE RÉVISION</p><h1>Bonjour '+esc(fn)+' 👋</h1><p>Retrouve ta progression et reprends facilement là où tu en étais.</p>'+heroAction+'</div></section>'+seg();
+ h+='<div class="dash-kpis"><div class="dash-kpi"><b>'+dur(totals.min)+'</b><span>Temps révisé</span></div><div class="dash-kpi"><b>'+totals.n+'</b><span>Séances enregistrées</span></div><div class="dash-kpi"><b>'+esc(totals.last)+'</b><span>Dernière séance</span></div></div>';
+ if(lastQuiz){var quizDate=new Date(lastQuiz.date);h+='<section class="panel dash-resume"><div><h2>Dernier examen — '+esc(lastQuiz.branch||"050 — Météorologie")+'</h2><p class="hint">'+esc(lastQuiz.series||"QCM")+' · '+quizDate.toLocaleString("fr-CH")+' · Score : <b>'+Number(lastQuiz.score)+' / '+Number(lastQuiz.total)+'</b></p></div><button class="btn alt" id="dash-meteo">Ouvrir Météorologie 050 →</button></section>'}
+ if(lastQuiz&&lastReview&&lastReview.id===lastQuiz.id&&lastReview.errors.length){h+='<section class="panel dash-review"><h2>À revoir</h2><p class="hint">'+lastReview.errors.length+' question'+(lastReview.errors.length>1?"s":"")+' à reprendre dans ton dernier examen.</p><button class="btn alt" id="dash-review-errors">Réviser mes erreurs →</button></section>'}
+ var visible=S.filter(function(subject){return filter==="all"||by(subject.c).cat===filter});
+ var maxStudy=Math.max.apply(null,[1].concat(visible.map(function(subject){return st(ofS(subject.c)).min})));
  ["ppl","spl"].forEach(function(k){if(filter!=="all"&&filter!==k)return;
+  var group=S.filter(function(subject){return subject.cat===k});
   var ct=st(sessions.filter(function(x){return by(x.s).cat===k}));
-  h+='<section class="cat '+k+'"><div class="hd"><h2>'+CAT[k].t+'</h2><p>'+CAT[k].s+' — '+dur(ct.min)+' · '+ct.n+' séances</p></div>';
-  S.filter(function(s){return s.cat===k}).forEach(function(s){var q=st(ofS(s.c));
-   h+='<button class="row" data-s="'+s.c+'"><span class="code">'+s.c+'</span><span>'+s.n+'</span><span class="n">'+dur(q.min)+'</span><small class="x n">'+q.n+' séances</small><small class="x n">'+q.last+'</small></button>'});
-  h+='</section>'});
- var mx=Math.max.apply(null,[1].concat(S.map(function(s){return st(ofS(s.c)).min})));
+  h+='<section class="cat '+k+'"><div class="hd"><h2>'+CAT[k].t+'</h2><p>'+CAT[k].s+' — '+dur(ct.min)+' · '+ct.n+' séances</p></div><div class="dash-subject-grid">';
+  group.forEach(function(subject){var q=st(ofS(subject.c)),goal=Number(goals[subject.c])||0,pct=goal?Math.min(100,Math.round(q.min/(goal*60)*100)):Math.round(q.min/maxStudy*100),meta=goal?(pct+' % de ton objectif de '+goal+' h'):(q.min?dur(q.min)+' révisées':'Aucune séance'),submeta=q.n+' séance'+(q.n===1?'':'s')+' · '+q.last;
+   h+='<button class="dash-subject '+k+'" data-s="'+subject.c+'"><span class="dash-subject-top"><span class="dash-subject-code">'+subject.c+'</span><span class="dash-subject-name">'+esc(subject.n)+'</span></span><span class="dash-progress" role="progressbar" aria-label="'+esc(subject.n)+' : '+(goal?pct+" % de l’objectif":"activité de révision")+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></span><span class="dash-subject-meta"><span>'+esc(meta)+'</span><span>'+q.n+' séance'+(q.n===1?'':'s')+'</span></span><span class="dash-subject-meta"><span>Dernière révision</span><span>'+esc(q.last)+'</span></span></button>'});
+  h+='</div></section>'});
+ var mx=Math.max.apply(null,[1].concat(S.map(function(subject){return st(ofS(subject.c)).min})));
  h+='<section class="panel"><h2>Temps par matière</h2>';
- S.forEach(function(s){if(filter!=="all"&&s.cat!==filter)return;var m=st(ofS(s.c)).min;h+='<div class="bar '+s.cat+'"><span>'+s.c+'</span><i style="width:'+(m/mx*100)+'%"></i><span>'+dur(m)+'</span></div>'});
+ S.forEach(function(subject){if(filter!=="all"&&subject.cat!==filter)return;var m=st(ofS(subject.c)).min;h+='<div class="bar '+subject.cat+'"><span>'+subject.c+'</span><i style="width:'+(m/mx*100)+'%"></i><span>'+dur(m)+'</span></div>'});
  h+='</section><section class="panel"><h2>8 dernières semaines</h2><div class="wk">';
  var wk=[],d=new Date(now);d.setDate(d.getDate()-((d.getDay()+6)%7));d.setHours(0,0,0,0);
  for(var i=7;i>=0;i--){var a=new Date(d);a.setDate(a.getDate()-i*7);var b=new Date(a);b.setDate(b.getDate()+7);
-  var m=fs().filter(function(x){return x.date>=iso(a)&&x.date<iso(b)}).reduce(function(s,x){return s+x.min},0);wk.push([a,m])}
+  var m=fs().filter(function(x){return x.date>=iso(a)&&x.date<iso(b)}).reduce(function(sum,x){return sum+x.min},0);wk.push([a,m])}
  var wm=Math.max.apply(null,[1].concat(wk.map(function(w){return w[1]})));
  wk.forEach(function(w){h+='<div><span>'+Math.round(w[1]/60*10)/10+'h</span><i style="height:'+(w[1]/wm*85)+'%"></i><span>'+String(w[0].getDate()).padStart(2,"0")+"/"+String(w[0].getMonth()+1).padStart(2,"0")+'</span></div>'});
  $("main").innerHTML=h+'</div></section>';bindSeg();
- document.querySelectorAll("[data-s]").forEach(function(b){b.onclick=function(){go("sub",b.dataset.s)}})}
-
+ $("dash-resume").onclick=function(){if(lastSession)go("sub",lastSession.s);else go("fiches")};
+ if($("dash-meteo"))$("dash-meteo").onclick=function(){go("fiche","050")};
+ if($("dash-review-errors"))$("dash-review-errors").onclick=function(){go("dashReview")};
+ document.querySelectorAll("[data-s]").forEach(function(b){b.onclick=function(){go("sub",b.dataset.s)}})
+}
+function dashReview(){
+ var saved=quizReviewRead(),h='<p><button class="btn alt" id="dash-review-back">← Retour au tableau de bord</button></p><h1>À revoir</h1><p class="sub">Les erreurs de ton dernier QCM, enregistrées sur cet appareil.</p>';
+ if(!saved||!saved.errors.length)h+='<section class="panel"><p>Aucune erreur récente à revoir.</p><button class="btn" id="dash-review-meteo">Ouvrir Météorologie 050</button></section>';
+ else h+='<section class="panel"><p class="hint">Score : <b>'+saved.score+' / '+saved.total+'</b> · '+new Date(saved.date).toLocaleString("fr-CH")+'</p><div class="qcm-review-list">'+saved.errors.map(function(x){var image=x.figurePage?'<p><a href="assets/bak-pages/page-'+Number(x.figurePage)+'.jpg" target="_blank" rel="noopener">Voir l’image de référence ('+Number(x.figurePage)+')</a></p>':"";return'<article class="qcm-review-item"><p class="hint">'+esc(x.source||"Météorologie 050")+'</p><h3>'+esc(x.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.answer)+'</p><p><b>Réponse correcte :</b> '+esc(x.expected)+'</p><p>'+esc(x.explanation)+'</p>'+image+'</article>'}).join("")+'</div><button class="btn" id="dash-review-meteo">Retourner aux fiches météo</button></section>';
+ $("main").innerHTML=h;$("dash-review-back").onclick=function(){go("dash")};if($("dash-review-meteo"))$("dash-review-meteo").onclick=function(){go("fiche","050")}
+}
 function logList(list){var l=list.slice().sort(function(a,b){return a.date<b.date?1:-1});
  if(!l.length)return '<p class="hint">Aucune séance pour le moment.</p>';
  return '<ul class="log">'+l.map(function(x){var s=by(x.s);return '<li><span><span class="tag2 '+s.cat+'">'+s.c+'</span> '+fd(x.date)+' — '+dur(x.min)+(x.note?' · '+esc(x.note):'')+'</span><button data-d="'+x.id+'">Supprimer</button></li>'}).join("")+'</ul>'}
@@ -441,7 +471,10 @@ var quizRun=[],quizStep=0,quizScore=0,quizPick=null,quizResult=false,quizPicks=[
 function quizHistoryKey(){return "qcm-results-v1:"+String(user&&user.id||"unknown")}
 function quizHistoryRead(){try{var rows=JSON.parse(localStorage.getItem(quizHistoryKey())||"[]");return Array.isArray(rows)?rows.filter(function(r){return r&&typeof r.date==="string"&&Number.isFinite(Number(r.score))&&Number.isFinite(Number(r.total))}):[]}catch(e){return[]}}
 function quizHistoryWrite(rows){try{localStorage.setItem(quizHistoryKey(),JSON.stringify(rows));return true}catch(e){return false}}
-function quizHistorySaveCurrent(){var rows=quizHistoryRead();if(!quizFinishedAt||!quizAttemptId)return rows;if(!rows.some(function(r){return r.id===quizAttemptId})){rows.push({id:quizAttemptId,score:quizScore,total:quizRun.length,date:quizFinishedAt.toISOString(),branch:"050 — Météorologie",series:quizModeName(quizMode)});rows.sort(function(a,b){return a.date.localeCompare(b.date)});quizHistoryWrite(rows)}return rows}
+function quizReviewKey(){return "qcm-last-errors-v1:"+String(user&&user.id||"unknown")}
+function quizReviewRead(){try{var value=JSON.parse(localStorage.getItem(quizReviewKey())||"null");return value&&Array.isArray(value.errors)?value:null}catch(e){return null}}
+function quizReviewWrite(value){try{localStorage.setItem(quizReviewKey(),JSON.stringify(value));return true}catch(e){return false}}
+function quizHistorySaveCurrent(){var rows=quizHistoryRead();if(!quizFinishedAt||!quizAttemptId)return rows;if(!rows.some(function(r){return r.id===quizAttemptId})){var errors=quizRun.map(function(q,i){var pick=quizPicks[i];if(pick===undefined||q.options[pick].correct)return null;return{question:q.question,answer:q.options[pick].text,expected:q.options.filter(function(o){return o.correct})[0].text,explanation:q.explanation,source:q.source,anchor:q.anchor,figurePage:q.figurePage}}).filter(Boolean);quizReviewWrite({id:quizAttemptId,date:quizFinishedAt.toISOString(),score:quizScore,total:quizRun.length,errors:errors});rows.push({id:quizAttemptId,score:quizScore,total:quizRun.length,date:quizFinishedAt.toISOString(),branch:"050 — Météorologie",series:quizModeName(quizMode)});rows.sort(function(a,b){return a.date.localeCompare(b.date)});quizHistoryWrite(rows)}return rows}
 function addPastQuizAttempt(){var d=$("past-quiz-date").value,t=$("past-quiz-time").value,score=Number($("past-quiz-score").value),total=Number($("past-quiz-total").value),date=new Date(d+"T"+t);if(!d||!t||!Number.isFinite(date.getTime())||!Number.isInteger(score)||!Number.isInteger(total)||total<1||score<0||score>total){say("past-quiz-msg","Vérifie la date, l’heure et le score (le score doit être compris dans le total).");return}var rows=quizHistoryRead();rows.push({id:"past-"+Date.now().toString(36)+Math.random().toString(36).slice(2),score:score,total:total,date:date.toISOString(),branch:"050 — Météorologie",series:"Examen précédent"});rows.sort(function(a,b){return a.date.localeCompare(b.date)});if(!quizHistoryWrite(rows)){say("past-quiz-msg","Impossible d’enregistrer cet examen sur cet appareil.");return}quizView()}
 function quizShuffle(items){var a=items.slice();for(var i=0;i<a.length-1;i++){var j=i+Math.floor(Math.random()*(a.length-i)),t=a[i];a[i]=a[j];a[j]=t}return a}
 function quizModeName(mode){return mode==="bak-all"?"Toutes les questions BAK 050":mode==="ofac"?"Version 20 questions — BAK + examen blanc OFAC":"Questions du cours"}
@@ -556,7 +589,7 @@ function chronoView(){
  };
  $("chrono-reset").onclick=function(){chronoElapsed=0;chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}chronoView()}
 }
-function render(){if(!user)return;nav();({dash:dash,fiches:fiches,fiche:ficheView,quiz:quizView,understanding:understandingView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+function render(){if(!user)return;nav();({dash:dash,dashReview:dashReview,fiches:fiches,fiche:ficheView,quiz:quizView,understanding:understandingView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
 })();
 </script>
 </body>
