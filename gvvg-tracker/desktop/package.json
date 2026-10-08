@@ -19,9 +19,11 @@
       "output": "release"
     },
     "files": [
-      "main.cjs"
+      "main.cjs",
+      "assets/app-icon.ico"
     ],
     "win": {
+      "icon": "assets/app-icon.ico",
       "target": [
         {
           "target": "portable",

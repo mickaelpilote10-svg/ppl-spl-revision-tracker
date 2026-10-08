@@ -1,4 +1,5 @@
 const { app, BrowserWindow, shell } = require("electron");
+const path = require("node:path");
 
 const APP_URL = "https://ppl-spl-revision-tracker-gvvg-track.vercel.app/";
 const APP_ORIGIN = new URL(APP_URL).origin;
@@ -24,6 +25,7 @@ function createWindow() {
     show: false,
     backgroundColor: "#0f1b29",
     autoHideMenuBar: true,
+    icon: path.join(__dirname, "assets", "app-icon.ico"),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
