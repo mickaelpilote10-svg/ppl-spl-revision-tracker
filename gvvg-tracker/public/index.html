@@ -325,7 +325,7 @@ function dash(){
  var wm=Math.max.apply(null,[1].concat(wk.map(function(w){return w[1]})));
  wk.forEach(function(w){h+='<div><span>'+Math.round(w[1]/60*10)/10+'h</span><i style="height:'+(w[1]/wm*85)+'%"></i><span>'+String(w[0].getDate()).padStart(2,"0")+"/"+String(w[0].getMonth()+1).padStart(2,"0")+'</span></div>'});
  $("main").innerHTML=h+'</div></section>';bindSeg();
- $("dash-resume").onclick=function(){if(lastSession)go("sub",lastSession.s);else go("fiches")};
+ $("dash-resume").onclick=function(){if(lastSession&&lastSession.s==="050")go("fiche","050");else if(lastSession)go("sub",lastSession.s);else go("fiches")};
  if($("dash-meteo"))$("dash-meteo").onclick=function(){go("fiche","050")};
  if($("dash-review-errors"))$("dash-review-errors").onclick=function(){go("dashReview")};
  document.querySelectorAll("[data-s]").forEach(function(b){b.onclick=function(){go("sub",b.dataset.s)}})
