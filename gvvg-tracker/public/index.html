@@ -279,7 +279,7 @@ async function logout(){await sb.auth.signOut()}
 /* ---------- Interface ---------- */
 function go(v,c){if(v!=="fiche"&&v!=="quiz")quizReviewReturn=false;view=v;cur=c||null;render();window.scrollTo(0,0)}
 function nav(){var t=[["dash","Tableau de bord"],["fiches","Mes fiches de révisions"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
- $("nav").innerHTML=t.map(function(a){var current=view===a[0]||(view==="sub"&&a[0]==="dash")||((view==="fiche"||view==="quiz")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
+ $("nav").innerHTML=t.map(function(a){var current=view===a[0]||(view==="sub"&&a[0]==="dash")||((view==="fiche"||view==="quiz"||view==="understanding")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
  $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
 function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
@@ -386,10 +386,10 @@ function fiches(){
 function ficheView(){
  if(cur!=="050"){go("fiches");return}
  var target=ficheTargetAnchor,backToReview=quizReviewReturn;ficheTargetAnchor=null;
- $("main").innerHTML=(backToReview?'<p><button class="btn alt" id="quiz-review-back">← Retour aux questions fausses</button></p>':'')+'<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Météorologie 050</h1><p class="sub">Fiche de révision — synthèse de cours</p><section class="panel qcm-launch"><h2>🎯 Questions du cours</h2><p class="hint">Le QCM de cours actuel : 20 questions à choix unique, avec correction et explications.</p><button class="btn" id="quiz-start">Commencer le QCM du cours</button></section><section class="panel qcm-launch"><h2>📚 Questions BAK OFFICIEL OFAC</h2><p class="hint">Choisis une version. Les réponses sont corrigées avec le corrigé du BAK 050.</p><div class="qcm-actions"><button class="btn" id="quiz-bak-start">Version 20 questions</button><button class="btn alt" id="quiz-bak-all-start">Toutes les questions BAK 050 (227)</button></div></section><section class="panel fiche-frame"><iframe title="Fiche de révision Météorologie 050" src="fiches/meteorologie-050.html'+(target?"#"+encodeURIComponent(target):"")+'" loading="lazy"></iframe></section>';
+ $("main").innerHTML=(backToReview?'<p><button class="btn alt" id="quiz-review-back">← Retour aux questions fausses</button></p>':'')+'<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Météorologie 050</h1><p class="sub">Fiche de révision — synthèse de cours</p><section class="panel qcm-launch"><h2>🎯 Questions du cours</h2><p class="hint">Le QCM de cours actuel : 20 questions à choix unique, avec correction et explications.</p><button class="btn" id="quiz-start">Commencer le QCM du cours</button></section><section class="panel qcm-launch"><h2>📚 Questions BAK OFFICIEL OFAC</h2><p class="hint">Choisis une version. Les réponses sont corrigées avec le corrigé du BAK 050.</p><div class="qcm-actions"><button class="btn" id="quiz-bak-start">Version 20 questions</button><button class="btn alt" id="quiz-bak-all-start">Toutes les questions BAK 050 (227)</button></div></section><section class="panel qcm-launch"><h2>🧠 Test de compréhension</h2><p class="hint">Explique chaque notion avec tes mots, sans choix de réponse. La correction locale recherche plusieurs notions clés et accepte des formulations proches. Série courte : 20 questions. Série longue : 217 questions tirées du cours et de la banque BAK.</p><div class="qcm-actions"><button class="btn" id="understanding-start-20">20 questions</button><button class="btn alt" id="understanding-start-217">217 questions</button></div><p class="hint">La correction est indicative : elle compare les notions détectées aux réponses et explications de référence. Tes réponses restent dans ton navigateur.</p></section><section class="panel fiche-frame"><iframe title="Fiche de révision Météorologie 050" src="fiches/meteorologie-050.html'+(target?"#"+encodeURIComponent(target):"")+'" loading="lazy"></iframe></section>';
  $("fiches-back").onclick=function(){quizReviewReturn=false;go("fiches")};
  if(backToReview)$("quiz-review-back").onclick=function(){quizReviewReturn=false;go("quiz","050")};
- $("quiz-start").onclick=function(){startQuiz("cours")};$("quiz-bak-start").onclick=function(){startQuiz("ofac")};$("quiz-bak-all-start").onclick=function(){startQuiz("bak-all")}
+ $("quiz-start").onclick=function(){startQuiz("cours")};$("quiz-bak-start").onclick=function(){startQuiz("ofac")};$("quiz-bak-all-start").onclick=function(){startQuiz("bak-all")};$("understanding-start-20").onclick=function(){startUnderstanding(20)};$("understanding-start-217").onclick=function(){startUnderstanding(217)}
 }
 var quizBank=[
  {question:"Quand on monte en altitude, que devient la pression atmosphérique ?",options:["Elle diminue, car la colonne d’air au-dessus est plus courte.","Elle reste identique, car la composition de l’air reste globalement la même.","Elle augmente, car l’air froid devient plus dense.","Elle varie uniquement avec le vent."],correct:0,explanation:"La pression diminue avec l’altitude : il y a moins d’air au-dessus du point considéré. La composition reste globalement similaire, mais l’air devient moins dense."},
@@ -486,6 +486,42 @@ function quizView(){
  if(!answered)document.querySelectorAll("[data-answer]").forEach(function(b){b.onclick=function(){quizPick=parseInt(b.dataset.answer,10);quizPicks[quizStep]=quizPick;if(q.options[quizPick].correct)quizScore++;quizView()}});
  if(answered)$("quiz-next").onclick=function(){if(quizStep===quizRun.length-1){quizFinishedAt=new Date();quizAttemptId=quizFinishedAt.getTime().toString(36)+Math.random().toString(36).slice(2);quizResult=true;quizHistorySaveCurrent()}else{quizStep++;quizPick=null}quizView()}
 }
+var understandingRun=[],understandingIndex=0,understandingScore=0,understandingAnswer="",understandingChecked=false,understandingCorrect=false,understandingResults=[];
+function startUnderstanding(size){
+ var pool=quizBank.concat(allBakQuizBank).map(function(q){return{question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,source:q.source||"Questions du cours"}});
+ understandingRun=quizShuffle(pool).slice(0,size);understandingIndex=0;understandingScore=0;understandingAnswer="";understandingChecked=false;understandingCorrect=false;understandingResults=[];go("understanding","050")
+}
+function understandingNorm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim()}
+var understandingStop=("avec dans pour quand quel quelle quels quelles que quoi est sont une un des les la le du de d au aux par sur sous entre cela cette ces leur leurs peut doit être avoir faire donne donnees indique explique signifie represente selon votre reponse reponses atmosphere atmospherique meteo question").split(" ");
+var understandingSynonyms=[["diminue","baisse","decroit","diminution"],["augmente","hausse","croît","augmentation"],["temperature","thermique","chaud","froid"],["pression","qnh","qfe","qff"],["altitude","hauteur","niveau"],["vent","direction","souffle"],["nuage","nuageux","nebulosite"],["eau","goutte","humidite","vapeur"],["glace","cristal","givrage","surfusion"],["monte","ascendance","ascendant"],["descend","subsidence","descendance"],["condense","condensation","saturation"],["stable","stabilite"],["instable","instabilite"],["front","occlusion"],["pluie","averse","precipitation"],["visibilite","brouillard","brume"],["adiabatique","detente","compression"],["soleil","rayonnement","insolation"]];
+function understandingVariants(word){for(var i=0;i<understandingSynonyms.length;i++)if(understandingSynonyms[i].indexOf(word)>=0)return understandingSynonyms[i];return[word]}
+function assessUnderstanding(q,answer){
+ var reference=(q.options[q.correct]||"")+" "+(q.explanation||"");
+ var questionTerms=understandingNorm(q.question).split(" ");
+ var terms=understandingNorm(reference).split(" ").filter(function(w){return w.length>=4&&understandingStop.indexOf(w)<0&&questionTerms.indexOf(w)<0});
+ var groups=[];terms.forEach(function(w){var v=understandingVariants(w).slice().sort().join("|");if(groups.indexOf(v)<0)groups.push(v)});
+ var words=understandingNorm(answer).split(" ");
+ var hits=groups.filter(function(g){return g.split("|").some(function(v){return words.indexOf(v)>=0})});
+ var needed=Math.min(4,Math.max(2,Math.ceil(groups.length*0.35)));
+ return{correct:hits.length>=needed,hits:hits.length,needed:needed,total:groups.length}
+}
+function understandingNext(){
+ if(understandingIndex>=understandingRun.length){go("understanding","050");return}
+ understandingIndex++;understandingAnswer="";understandingChecked=false;understandingCorrect=false;understandingView()
+}
+function understandingView(){
+ if(cur!=="050"||!understandingRun.length){go("fiches");return}
+ var q=understandingRun[understandingIndex];
+ if(!q){var pct=Math.round(understandingScore/understandingRun.length*100),missed=understandingResults.filter(function(x){return!x.correct});$("main").innerHTML='<p><button class="btn alt" id="understanding-back">← Retour à Météorologie 050</button></p><h1>Résultat — Test de compréhension</h1><section class="panel"><p class="qcm-score">'+understandingScore+' / '+understandingRun.length+'</p><p>'+pct+' % de réponses reconnues comme suffisamment complètes.</p><p class="hint">Correction locale par mots-clés et synonymes : elle peut manquer une bonne paraphrase ou accepter une réponse trop courte. Vérifie les explications pour apprendre.</p><button class="btn" id="understanding-again">Recommencer</button></section>'+(missed.length?'<section class="panel"><h2>À revoir ('+missed.length+')</h2><div class="qcm-review-list">'+missed.map(function(x){return'<article class="qcm-review-item"><h3>'+esc(x.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.answer||"Aucune réponse")+'</p><p><b>Réponse de référence :</b> '+esc(x.expected)+'</p><p>'+esc(x.explanation)+'</p></article>'}).join("")+'</div></section>':'<section class="panel"><h2>Bravo !</h2><p>Toutes les réponses ont passé le repérage des notions clés.</p></section>');
+ $("understanding-back").onclick=function(){go("fiche","050")};$("understanding-again").onclick=function(){startUnderstanding(understandingRun.length)};return}
+ var expected=q.options[q.correct]||"";
+ var feedback=understandingChecked?'<div class="qcm-feedback '+(understandingCorrect?"correct":"incorrect")+'" role="status" aria-live="polite"><strong>'+(understandingCorrect?"✓ Oui, les idées principales semblent correspondre.":"✗ Pas encore assez d’éléments reconnus.")+'</strong><p>Réponse de référence : '+esc(expected)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p></div>':'';
+ $("main").innerHTML='<p><button class="btn alt" id="understanding-back">← Retour à Météorologie 050</button></p><h1>Test de compréhension · 050</h1><p class="sub">Question '+(understandingIndex+1)+' / '+understandingRun.length+' · '+esc(q.source)+'</p><section class="panel qcm-panel"><div class="qcm-progress"><b>Question '+(understandingIndex+1)+' / '+understandingRun.length+'</b><b>Score : '+understandingScore+'</b></div><div class="qcm-meter"><i style="width:'+Math.round(understandingIndex/understandingRun.length*100)+'%"></i></div><h2 class="qcm-question">Explique avec tes mots : '+esc(q.question)+'</h2><label for="understanding-answer">Ta réponse</label><textarea id="understanding-answer" rows="5" style="width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px"'+(understandingChecked?" disabled":"")+'>'+esc(understandingAnswer)+'</textarea><div class="qcm-actions">'+(understandingChecked?'<button class="btn" id="understanding-next">'+(understandingIndex===understandingRun.length-1?"Voir le résultat":"Question suivante →")+'</button>':'<button class="btn" id="understanding-check">Vérifier ma réponse</button>')+'</div>'+feedback+'</section>';
+ $("understanding-back").onclick=function(){go("fiche","050")};
+ var input=$("understanding-answer");if(input&&!understandingChecked)input.oninput=function(){understandingAnswer=input.value};
+ if(understandingChecked)$("understanding-next").onclick=understandingNext;
+ else $("understanding-check").onclick=function(){understandingAnswer=input.value.trim();if(!understandingAnswer){input.focus();return}var result=assessUnderstanding(q,understandingAnswer);understandingCorrect=result.correct;if(understandingCorrect)understandingScore++;understandingResults.push({question:q.question,answer:understandingAnswer,correct:understandingCorrect,expected:expected,explanation:q.explanation});understandingChecked=true;understandingView()}
+}
 function chronoFormat(ms){var total=Math.floor(Math.max(0,ms)/1000),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return [h,m,s].map(function(x){return String(x).padStart(2,"0")}).join(":")}
 function chronoCurrent(){return chronoElapsed+(chronoStartedAt===null?0:Date.now()-chronoStartedAt)}
 function chronoDraw(){var e=$("chrono-display");if(e)e.textContent=chronoFormat(chronoCurrent())}
@@ -499,7 +535,7 @@ function chronoView(){
  };
  $("chrono-reset").onclick=function(){chronoElapsed=0;chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}chronoView()}
 }
-function render(){if(!user)return;nav();({dash:dash,fiches:fiches,fiche:ficheView,quiz:quizView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+function render(){if(!user)return;nav();({dash:dash,fiches:fiches,fiche:ficheView,quiz:quizView,understanding:understandingView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
 })();
 </script>
 </body>
