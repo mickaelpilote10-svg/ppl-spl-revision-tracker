@@ -57,10 +57,10 @@ h2{font:700 1.15rem/1.2 Georgia,serif;margin:0 0 10px}
 .dash-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}.dash-kpi{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:14px 16px}.dash-kpi b{display:block;font:700 1.45rem/1.2 Georgia,serif}.dash-kpi span{color:var(--muted);font-size:.9rem}
 .dash-resume{display:flex;justify-content:space-between;align-items:center;gap:16px;border-left:5px solid var(--warm)}.dash-resume h2{margin-bottom:4px}.dash-resume p{margin:0}.dash-resume .btn{white-space:nowrap}
 .dash-subject-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;padding:12px}
-.dash-subject{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.dash-subject{display:flex;flex-direction:column;align-items:stretch;min-height:146px;width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
 .dash-subject:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 7px 18px rgba(0,0,0,.09)}
 .dash-subject-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.dash-subject-code{font:700 1.05rem Georgia,serif;color:var(--c)}.dash-subject-name{font-weight:700}.dash-subject-meta{display:flex;justify-content:space-between;gap:8px;margin-top:10px;color:var(--muted);font-size:.82rem}
-.dash-progress{height:7px;overflow:hidden;border-radius:99px;background:var(--line);margin-top:8px}.dash-progress i{display:block;height:100%;background:var(--c);border-radius:99px}
+.dash-progress{display:block;width:100%;height:7px;overflow:hidden;border-radius:99px;background:var(--line);margin-top:8px}.dash-progress i{display:block;height:100%;background:var(--c);border-radius:99px}
 .dash-review{border-left:5px solid var(--err)}.dash-review h2{margin-bottom:5px}.dash-review p{margin:4px 0 10px}
 @media(max-width:560px){.dash-hero{min-height:190px;padding:22px}.dash-kpis{gap:7px}.dash-kpi{padding:11px 10px}.dash-kpi b{font-size:1.2rem}.dash-kpi span{font-size:.78rem}.dash-resume{align-items:flex-start;flex-direction:column}.dash-resume .btn{width:100%;text-align:center}.dash-subject-grid{grid-template-columns:1fr;padding:10px}}
 @media(prefers-reduced-motion:reduce){.dash-subject{transition:none}.dash-subject:hover{transform:none}}
@@ -303,7 +303,7 @@ function dash(){
  var quizRows=quizHistoryRead().slice().sort(function(a,b){return a.date.localeCompare(b.date)}),lastQuiz=quizRows[quizRows.length-1],lastReview=quizReviewRead();
  var heroAction=lastSession?'<button class="btn" id="dash-resume">Reprendre '+esc(by(lastSession.s).n)+' →</button>':'<button class="btn" id="dash-resume">Choisir une matière →</button>';
  var h='<section class="dash-hero"><div class="dash-hero-copy"><p class="dash-eyebrow">PPL(A) / SPL · ESPACE DE RÉVISION</p><h1>Bonjour '+esc(fn)+' 👋</h1><p>Retrouve ta progression et reprends facilement là où tu en étais.</p>'+heroAction+'</div></section>'+seg();
- h+='<div class="dash-kpis"><div class="dash-kpi"><b>'+dur(totals.min)+'</b><span>Temps révisé</span></div><div class="dash-kpi"><b>'+totals.n+'</b><span>Séances enregistrées</span></div><div class="dash-kpi"><b>'+esc(totals.last)+'</b><span>Dernière séance</span></div></div>';
+ h+='<div class="dash-kpis"><div class="dash-kpi"><b>'+dur(totals.min)+' révisées</b><span>Temps total de révision</span></div><div class="dash-kpi"><b>'+totals.n+'</b><span>Séances enregistrées</span></div><div class="dash-kpi"><b>'+esc(totals.last)+'</b><span>Dernière séance</span></div></div>';
  if(lastQuiz){var quizDate=new Date(lastQuiz.date);h+='<section class="panel dash-resume"><div><h2>Dernier examen — '+esc(lastQuiz.branch||"050 — Météorologie")+'</h2><p class="hint">'+esc(lastQuiz.series||"QCM")+' · '+quizDate.toLocaleString("fr-CH")+' · Score : <b>'+Number(lastQuiz.score)+' / '+Number(lastQuiz.total)+'</b></p></div><button class="btn alt" id="dash-meteo">Ouvrir Météorologie 050 →</button></section>'}
  if(lastQuiz&&lastReview&&lastReview.id===lastQuiz.id&&lastReview.errors.length){h+='<section class="panel dash-review"><h2>À revoir</h2><p class="hint">'+lastReview.errors.length+' question'+(lastReview.errors.length>1?"s":"")+' à reprendre dans ton dernier examen.</p><button class="btn alt" id="dash-review-errors">Réviser mes erreurs →</button></section>'}
  var visible=S.filter(function(subject){return filter==="all"||by(subject.c).cat===filter});
@@ -311,19 +311,19 @@ function dash(){
  ["ppl","spl"].forEach(function(k){if(filter!=="all"&&filter!==k)return;
   var group=S.filter(function(subject){return subject.cat===k});
   var ct=st(sessions.filter(function(x){return by(x.s).cat===k}));
-  h+='<section class="cat '+k+'"><div class="hd"><h2>'+CAT[k].t+'</h2><p>'+CAT[k].s+' — '+dur(ct.min)+' · '+ct.n+' séances</p></div><div class="dash-subject-grid">';
-  group.forEach(function(subject){var q=st(ofS(subject.c)),goal=Number(goals[subject.c])||0,pct=goal?Math.min(100,Math.round(q.min/(goal*60)*100)):Math.round(q.min/maxStudy*100),meta=goal?(pct+' % de ton objectif de '+goal+' h'):(q.min?dur(q.min)+' révisées':'Aucune séance'),submeta=q.n+' séance'+(q.n===1?'':'s')+' · '+q.last;
+  h+='<section class="cat '+k+'"><div class="hd"><h2>'+CAT[k].t+'</h2><p>'+CAT[k].s+' — '+dur(ct.min)+' révisées · '+ct.n+' séances</p></div><div class="dash-subject-grid">';
+  group.forEach(function(subject){var q=st(ofS(subject.c)),goal=Number(goals[subject.c])||0,pct=goal?Math.min(100,Math.round(q.min/(goal*60)*100)):Math.round(q.min/maxStudy*100),meta=dur(q.min)+' révisées'+(goal?' · '+pct+' % de ton objectif':''),submeta=q.n+' séance'+(q.n===1?'':'s')+' · '+q.last;
    h+='<button class="dash-subject '+k+'" data-s="'+subject.c+'"><span class="dash-subject-top"><span class="dash-subject-code">'+subject.c+'</span><span class="dash-subject-name">'+esc(subject.n)+'</span></span><span class="dash-progress" role="progressbar" aria-label="'+esc(subject.n)+' : '+(goal?pct+" % de l’objectif":"activité de révision")+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+pct+'"><i style="width:'+pct+'%"></i></span><span class="dash-subject-meta"><span>'+esc(meta)+'</span><span>'+q.n+' séance'+(q.n===1?'':'s')+'</span></span><span class="dash-subject-meta"><span>Dernière révision</span><span>'+esc(q.last)+'</span></span></button>'});
   h+='</div></section>'});
  var mx=Math.max.apply(null,[1].concat(S.map(function(subject){return st(ofS(subject.c)).min})));
  h+='<section class="panel"><h2>Temps par matière</h2>';
- S.forEach(function(subject){if(filter!=="all"&&subject.cat!==filter)return;var m=st(ofS(subject.c)).min;h+='<div class="bar '+subject.cat+'"><span>'+subject.c+'</span><i style="width:'+(m/mx*100)+'%"></i><span>'+dur(m)+'</span></div>'});
+ S.forEach(function(subject){if(filter!=="all"&&subject.cat!==filter)return;var m=st(ofS(subject.c)).min;h+='<div class="bar '+subject.cat+'"><span>'+subject.c+'</span><i style="width:'+(m/mx*100)+'%"></i><span>'+dur(m)+' révisées</span></div>'});
  h+='</section><section class="panel"><h2>8 dernières semaines</h2><div class="wk">';
  var wk=[],d=new Date(now);d.setDate(d.getDate()-((d.getDay()+6)%7));d.setHours(0,0,0,0);
  for(var i=7;i>=0;i--){var a=new Date(d);a.setDate(a.getDate()-i*7);var b=new Date(a);b.setDate(b.getDate()+7);
   var m=fs().filter(function(x){return x.date>=iso(a)&&x.date<iso(b)}).reduce(function(sum,x){return sum+x.min},0);wk.push([a,m])}
  var wm=Math.max.apply(null,[1].concat(wk.map(function(w){return w[1]})));
- wk.forEach(function(w){h+='<div><span>'+Math.round(w[1]/60*10)/10+'h</span><i style="height:'+(w[1]/wm*85)+'%"></i><span>'+String(w[0].getDate()).padStart(2,"0")+"/"+String(w[0].getMonth()+1).padStart(2,"0")+'</span></div>'});
+ wk.forEach(function(w){h+='<div><span>'+Math.round(w[1]/60*10)/10+' h révisées</span><i style="height:'+(w[1]/wm*85)+'%"></i><span>'+String(w[0].getDate()).padStart(2,"0")+"/"+String(w[0].getMonth()+1).padStart(2,"0")+'</span></div>'});
  $("main").innerHTML=h+'</div></section>';bindSeg();
  $("dash-resume").onclick=function(){if(lastSession&&lastSession.s==="050")go("fiche","050");else if(lastSession)go("sub",lastSession.s);else go("fiches")};
  if($("dash-meteo"))$("dash-meteo").onclick=function(){go("fiche","050")};
