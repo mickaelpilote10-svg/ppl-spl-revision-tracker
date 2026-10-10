@@ -120,6 +120,12 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .qcm-explanation{font-size:.96rem}.qcm-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .qcm-score{font:700 3rem/1.1 Georgia,serif;color:var(--ppl);margin:8px 0}
 .qcm-review-list{display:grid;gap:12px;margin-top:14px}.qcm-review-item{border:1px solid var(--line);border-left:5px solid var(--err);border-radius:9px;padding:14px;background:var(--surface)}.qcm-review-item h3{font:700 1rem/1.4 'Segoe UI',system-ui,sans-serif;margin:0 0 8px}.qcm-review-item p{margin:6px 0}.qcm-review-item .btn{margin-top:8px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.grey{background:color-mix(in srgb,var(--muted) 24%,var(--surface));color:var(--ink);border:1px solid color-mix(in srgb,var(--muted) 45%,var(--line))}
+.btn.grey:hover{background:color-mix(in srgb,var(--muted) 34%,var(--surface))}
+.qcm-fav-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:0 0 14px}.qcm-fav{padding:7px 12px;font-size:.92rem}.qcm-fav.is-fav{border-color:var(--warm);color:var(--warm)}
+.qcm-fav-prompt{margin:12px 0 8px}.qcm-review-item .btn{margin-right:8px}
+.fav-item{border-left-color:var(--warm)!important}.fav-options{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px}.fav-options li{display:flex;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}.fav-options li.is-right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 11%,var(--surface))}.fav-options b{flex:0 0 auto}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal div{min-height:52px;background:var(--bg);border-radius:6px;padding:4px;font-size:.8rem;color:var(--muted)}
 .cal .h{min-height:0;background:none;text-align:center;font-weight:600}.cal .on{background:var(--ppl);color:var(--on)}.cal .on b{display:block;font-size:.9rem}
@@ -292,7 +298,7 @@ async function logout(){await sb.auth.signOut()}
 /* ---------- Interface ---------- */
 function go(v,c){if(v!=="fiche"&&v!=="quiz")quizReviewReturn=false;view=v;cur=c||null;render();window.scrollTo(0,0)}
 function nav(){var t=[["dash","Tableau de bord"],["fiches","Mes fiches de révisions"],["timer","Chronomètre"],["add","Séances"],["cal","Calendrier"],["profile","Mon profil"],["set","Paramètres"]];
- $("nav").innerHTML=t.map(function(a){var current=view===a[0]||((view==="sub"||view==="dashReview")&&a[0]==="dash")||((view==="fiche"||view==="quiz"||view==="understanding")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
+ $("nav").innerHTML=t.map(function(a){var current=view===a[0]||((view==="sub"||view==="dashReview")&&a[0]==="dash")||((view==="fiche"||view==="quiz"||view==="understanding"||view==="favs")&&a[0]==="fiches");return '<button data-v="'+a[0]+'"'+(current?' aria-current="page"':'')+'>'+a[1]+'</button>'}).join("");
  $("nav").querySelectorAll("button").forEach(function(b){b.onclick=function(){go(b.dataset.v)}})}
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
 function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
@@ -416,10 +422,10 @@ function fiches(){
 function ficheView(){
  if(cur!=="050"){go("fiches");return}
  var target=ficheTargetAnchor,backToReview=quizReviewReturn;ficheTargetAnchor=null;
- $("main").innerHTML=(backToReview?'<p><button class="btn alt" id="quiz-review-back">← Retour aux questions fausses</button></p>':'')+'<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Météorologie 050</h1><p class="sub">Fiche de révision — synthèse de cours</p><section class="panel qcm-launch"><h2>🎯 Questions du cours</h2><p class="hint">Le QCM de cours actuel : 20 questions à choix unique, avec correction et explications.</p><button class="btn" id="quiz-start">Commencer le QCM du cours</button></section><section class="panel qcm-launch"><h2>📚 Questions BAK OFFICIEL OFAC</h2><p class="hint">Choisis une version. Les réponses sont corrigées avec le corrigé du BAK 050.</p><div class="qcm-actions"><button class="btn" id="quiz-bak-start">Version 20 questions</button><button class="btn alt" id="quiz-bak-all-start">Toutes les questions BAK 050 (227)</button></div></section><section class="panel qcm-launch"><h2>🧠 Test de compréhension</h2><p class="hint">Explique chaque notion avec tes mots, sans choix de réponse. La correction locale recherche plusieurs notions clés et accepte des formulations proches. Série courte : 20 questions. Série longue : 217 questions tirées du cours et de la banque BAK.</p><div class="qcm-actions"><button class="btn" id="understanding-start-20">20 questions</button><button class="btn alt" id="understanding-start-217">217 questions</button></div><p class="hint">La correction est indicative : elle compare les notions détectées aux réponses et explications de référence. Tes réponses restent dans ton navigateur.</p></section><section class="panel fiche-frame"><iframe title="Fiche de révision Météorologie 050" src="fiches/meteorologie-050.html'+(target?"#"+encodeURIComponent(target):"")+'" loading="lazy"></iframe></section>';
+ $("main").innerHTML=(backToReview?'<p><button class="btn alt" id="quiz-review-back">← Retour aux questions fausses</button></p>':'')+'<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Météorologie 050</h1><p class="sub">Fiche de révision — synthèse de cours</p><section class="panel qcm-launch"><h2>🎯 Questions du cours</h2><p class="hint">Le QCM de cours actuel : 20 questions à choix unique, avec correction et explications.</p><div class="qcm-actions"><button class="btn" id="quiz-start">Commencer le QCM du cours</button><button class="btn grey" id="quiz-complete-start">Toutes questions ('+complete050QuizBank.length+') du cours</button></div></section><section class="panel qcm-launch"><h2>📚 Questions BAK OFFICIEL OFAC</h2><p class="hint">Choisis une version. Les réponses sont corrigées avec le corrigé du BAK 050.</p><div class="qcm-actions"><button class="btn" id="quiz-bak-start">Version 20 questions</button><button class="btn alt" id="quiz-bak-all-start">Toutes les questions BAK 050 (227)</button></div></section>'+favLaunchHtml()+'<section class="panel qcm-launch"><h2>🧠 Test de compréhension</h2><p class="hint">Explique chaque notion avec tes mots, sans choix de réponse. La correction locale recherche plusieurs notions clés et accepte des formulations proches. Série courte : 20 questions. Série longue : 217 questions tirées du cours et de la banque BAK.</p><div class="qcm-actions"><button class="btn" id="understanding-start-20">20 questions</button><button class="btn alt" id="understanding-start-217">217 questions</button></div><p class="hint">La correction est indicative : elle compare les notions détectées aux réponses et explications de référence. Tes réponses restent dans ton navigateur.</p></section><section class="panel fiche-frame"><iframe title="Fiche de révision Météorologie 050" src="fiches/meteorologie-050.html'+(target?"#"+encodeURIComponent(target):"")+'" loading="lazy"></iframe></section>';
  $("fiches-back").onclick=function(){quizReviewReturn=false;go("fiches")};
  if(backToReview)$("quiz-review-back").onclick=function(){quizReviewReturn=false;go("quiz","050")};
- $("quiz-start").onclick=function(){startQuiz("cours")};$("quiz-bak-start").onclick=function(){startQuiz("ofac")};$("quiz-bak-all-start").onclick=function(){startQuiz("bak-all")};$("understanding-start-20").onclick=function(){startUnderstanding(20)};$("understanding-start-217").onclick=function(){startUnderstanding(217)}
+ $("quiz-start").onclick=function(){startQuiz("cours")};$("quiz-complete-start").onclick=function(){startQuiz("complete")};$("favs-open").onclick=function(){go("favs","050")};$("favs-quiz-start").onclick=function(){startQuiz("favoris")};$("quiz-bak-start").onclick=function(){startQuiz("ofac")};$("quiz-bak-all-start").onclick=function(){startQuiz("bak-all")};$("understanding-start-20").onclick=function(){startUnderstanding(20)};$("understanding-start-217").onclick=function(){startUnderstanding(217)}
 }
 var quizBank=[
  {question:"Quand on monte en altitude, que devient la pression atmosphérique ?",options:["Elle diminue, car la colonne d’air au-dessus est plus courte.","Elle reste identique, car la composition de l’air reste globalement la même.","Elle augmente, car l’air froid devient plus dense.","Elle varie uniquement avec le vent."],correct:0,explanation:"La pression diminue avec l’altitude : il y a moins d’air au-dessus du point considéré. La composition reste globalement similaire, mais l’air devient moins dense."},
@@ -444,6 +450,224 @@ var quizBank=[
  {question:"Quelle association sur les anticyclones est correcte ?",options:["Dynamique = descente de l’air ; thermique = air froid dense favorisant une pression élevée.","Dynamique = air froid au sol ; thermique = jet-stream en altitude.","Dynamique = front chaud ; thermique = front froid.","Les deux sont dus uniquement à la convergence au sol."],correct:0,explanation:"L’anticyclone dynamique est lié à la subsidence, donc à la descente de l’air. L’anticyclone thermique est favorisé par la densité de l’air froid et une pression élevée."}
 
 ];
+/* ---------- Banque complète « Toutes questions du cours » (météo 050) ----------
+   Chaque question supplémentaire est ajoutée avec qx(chapitre, ancre, question, bonneRéponse, [fausses réponses], explication).
+   Le bouton affiche automatiquement le nombre réel de questions de complete050QuizBank. */
+var courseChapters={"01":["Pression et altitude","01-pression-et-altitude"],"02":["Vent","02-vent"],"03":["Thermodynamique","03-thermodynamique"],"04":["Nuages","04-nuages"],"05":["Stabilité, fronts et perturbations","05-stabilite-fronts-et-perturbations"],"06":["Occlusions et phénomènes météo","06-occlusions-et-phenomenes-meteo"]};
+function qx(ch,anchor,question,good,wrongs,explanation){var c=courseChapters[ch];return{question:question,options:[good].concat(wrongs),correct:0,explanation:explanation,source:"Questions du cours · "+ch+" "+c[0],anchor:anchor||c[1]}}
+var courseExtraQuizBank=[
+ /* 01 — Pression et altitude */
+ qx("01",null,"Quelle formule relie le poids, la masse et la gravité ?",
+  "P = m × g, avec g ≈ 9,81 m/s².",["P = m / g, avec g ≈ 9,81 m/s².","P = m + g, avec g ≈ 9,81 kg.","P = g / m, avec g ≈ 981 m/s²."],
+  "Le poids est une force : P = m × g, avec g ≈ 9,81 m/s². Plus la masse est grande, plus le poids est grand."),
+ qx("01",null,"Dans quelles unités exprime-t-on respectivement le poids et la masse ?",
+  "Poids en newtons (N) ; masse en kilogrammes (kg).",["Poids en kilogrammes (kg) ; masse en newtons (N).","Poids et masse en newtons (N).","Poids en hectopascals (hPa) ; masse en kilogrammes (kg)."],
+  "Le poids est une force exprimée en newtons. La masse mesure la quantité de matière et s’exprime en kilogrammes."),
+ qx("01",null,"Comment fonctionne un baromètre anéroïde ?",
+  "Des capsules métalliques déformables, reliées à une aiguille, réagissent aux variations de pression.",["Une colonne de liquide monte ou descend selon la température.","Une girouette tourne selon la pression.","Une hélice mesure la vitesse de l’air."],
+  "Le baromètre anéroïde mesure la pression atmosphérique grâce à des capsules métalliques déformables reliées à une aiguille."),
+ qx("01",null,"Quelle est la pression moyenne au niveau de la mer ?",
+  "Environ 1013,25 hPa.",["Environ 500 hPa.","Environ 760 hPa.","Environ 1500 hPa."],
+  "La pression moyenne au niveau de la mer est d’environ 1013,25 hPa. Elle diminue ensuite avec l’altitude."),
+ qx("01","qnh-qfe-qff","Quel réglage indique la hauteur au-dessus de l’aérodrome ?",
+  "Le QFE : pression locale à l’altitude de la station.",["Le QNH : pression ramenée au niveau moyen de la mer.","Le QFF : pression ramenée au niveau de la mer selon les conditions locales.","Aucun : un altimètre ne peut indiquer qu’une altitude."],
+  "Le QFE est la pression locale à l’altitude de la station. Il sert à indiquer la hauteur au-dessus de l’aérodrome."),
+ qx("01","qnh-qfe-qff","Quel est le repère à retenir pour le QNH ?",
+  "Altitude par rapport au niveau moyen de la mer.",["Hauteur au-dessus de l’aérodrome.","Comparaison des pressions en météo.","Vitesse du vent en altitude."],
+  "Repère de la fiche : QNH = altitude mer ; QFE = hauteur aérodrome ; QFF = comparaison météo."),
+ qx("01","cartes-isobares-isohypses","Que signifie la lettre H sur une carte météo ?",
+  "Haute pression, généralement associée à un anticyclone.",["Humidité élevée.","Hauteur de nuage.","Haute altitude du sol."],
+  "H = haute pression, généralement associée à un anticyclone. B = basse pression, associée à une dépression."),
+ qx("01","cartes-isobares-isohypses","Que représente l’écart entre deux isobares sur une carte ?",
+  "L’intervalle de pression indiqué sur la carte, par exemple 5 hPa.",["La vitesse du vent entre les deux lignes.","La hauteur des nuages.","La température moyenne de la zone."],
+  "Les isobares sont tracées à intervalle régulier de pression, par exemple tous les 5 hPa. L’écart est indiqué sur la carte."),
+ qx("01","cartes-isobares-isohypses","À quoi sont souvent ramenées les pressions d’une carte au sol ?",
+  "Au niveau de la mer.",["À 500 hPa.","À l’altitude du sommet le plus proche.","À la hauteur de la base des nuages."],
+  "Sur une carte au sol, les pressions sont souvent ramenées au niveau de la mer pour pouvoir être comparées."),
+ /* 02 — Vent */
+ qx("02",null,"Quel instrument mesure la vitesse du vent ?",
+  "L’anémomètre.",["La girouette.","Le baromètre anéroïde.","Le néphoscope."],
+  "L’anémomètre mesure la vitesse du vent. La girouette donne la direction."),
+ qx("02",null,"Quel instrument donne la direction du vent ?",
+  "La girouette.",["L’anémomètre.","Le lidar.","Le baromètre anéroïde."],
+  "La girouette indique la direction du vent, l’anémomètre sa vitesse."),
+ qx("02",null,"Combien de km/h vaut environ 1 nœud (1 kt) ?",
+  "Environ 1,85 km/h.",["Environ 0,5 km/h.","Environ 3,6 km/h.","Environ 10 km/h."],
+  "1 kt ≈ 1,85 km/h. Par exemple, 10 kt ≈ 18,5 km/h."),
+ qx("02","barbules-vent","Un symbole de vent comporte une grande barbule et une petite barbule. Quelle vitesse indique-t-il ?",
+  "15 kt.",["10 kt.","5 kt.","60 kt."],
+  "On additionne les valeurs : grande barbule 10 kt + petite barbule 5 kt = 15 kt."),
+ qx("02",null,"Au sol, dans quel sens l’air se déplace-t-il avant d’être dévié ?",
+  "Des hautes pressions vers les basses pressions.",["Des basses pressions vers les hautes pressions.","Toujours vers le nord.","Toujours parallèlement aux isobares, sans déviation."],
+  "Au sol, l’air se déplace des hautes pressions vers les basses pressions. La rotation terrestre le dévie ensuite."),
+ qx("02",null,"Dans quel sens la rotation terrestre dévie-t-elle le vent dans l’hémisphère Nord ?",
+  "Vers la droite.",["Vers la gauche.","Vers le haut.","Elle ne le dévie pas."],
+  "Le vent est dévié vers la droite dans l’hémisphère Nord et vers la gauche dans l’hémisphère Sud."),
+ qx("02",null,"En altitude, lorsque les frottements sont faibles, comment souffle le vent ?",
+  "Presque parallèlement aux isohypses.",["Perpendiculairement aux isohypses.","Toujours du sud vers le nord.","Uniquement vers le bas."],
+  "En altitude, avec peu de frottements, le vent souffle presque parallèlement aux isohypses."),
+ qx("02","frottements-vent","Où les frottements sont-ils généralement les plus faibles ?",
+  "Sur la mer.",["Sur la terre.","En forêt.","Dans une vallée étroite."],
+  "Sur mer, les frottements sont généralement plus faibles que sur terre : le vent y est moins ralenti."),
+ qx("02",null,"Que se passe-t-il le jour avec le vent de vallée ?",
+  "Les pentes chauffent et l’air chaud monte vers les sommets.",["Les pentes se refroidissent et l’air froid descend vers la vallée.","Le vent souffle de la mer vers la terre.","Le vent souffle de la terre vers la mer."],
+  "Le jour, les pentes chauffent : l’air chaud monte vers les sommets. C’est le vent de vallée."),
+ qx("02",null,"Que se passe-t-il la nuit avec le vent de montagne ?",
+  "Les pentes se refroidissent et l’air froid descend vers la vallée.",["Les pentes chauffent et l’air chaud monte vers les sommets.","L’air froid monte vers les sommets.","L’air reste immobile, sans mouvement."],
+  "La nuit, les pentes se refroidissent : l’air froid descend vers la vallée. C’est le vent de montagne."),
+ qx("02",null,"Pourquoi la brise de mer souffle-t-elle le jour ?",
+  "La terre chauffe plus vite que la mer : le vent souffle de la mer vers la terre.",["La mer chauffe plus vite que la terre : le vent souffle de la terre vers la mer.","La terre se refroidit plus vite : le vent souffle de la terre vers la mer.","Le vent de vallée remplace la brise."],
+  "Le jour, la terre chauffe plus vite que la mer. Le vent souffle de la mer vers la terre : c’est la brise de mer."),
+ qx("02",null,"Que décrit la brise de terre ?",
+  "La nuit, la terre se refroidit plus vite et le vent souffle de la terre vers la mer.",["Le jour, le vent souffle de la terre vers la mer.","La nuit, le vent souffle de la mer vers la terre.","Un vent du sud qui descend les Alpes."],
+  "La nuit, la terre se refroidit plus vite que la mer. Le vent souffle de la terre vers la mer : brise de terre."),
+ qx("02",null,"Quelle paire de brises correspond au jour ?",
+  "Brise de mer et vent de vallée.",["Brise de terre et vent de montagne.","Brise de mer et vent de montagne.","Brise de terre et vent de vallée."],
+  "Mémo de la fiche : jour = brise de mer et vent de vallée ; nuit = brise de terre et vent de montagne."),
+ qx("02",null,"Que provoque une convergence au sol ?",
+  "L’air se rassemble et monte : formation de nuages et de précipitations favorisée.",["L’air s’éloigne et descend : temps plus stable.","L’air reste immobile.","Une forte hausse de pression en altitude."],
+  "Dans une convergence au sol, l’air se rassemble et monte. La basse pression favorise nuages et précipitations."),
+ qx("02",null,"Que provoque une divergence au sol ?",
+  "L’air s’éloigne, l’air descend et le temps tend à être plus stable.",["L’air se rassemble et monte : orages fréquents.","L’air chaud monte rapidement.","La formation d’un front froid."],
+  "En divergence au sol, l’air s’éloigne et de l’air descend pour le remplacer. Le temps tend à être plus stable."),
+ /* 03 — Thermodynamique */
+ qx("03",null,"Parmi ces changements d’état, lequel absorbe de la chaleur ?",
+  "La vaporisation (liquide → gaz).",["La condensation (gaz → liquide).","La solidification (liquide → solide).","La condensation solide (gaz → solide)."],
+  "Absorbent de la chaleur : fusion, vaporisation et sublimation. Libèrent de la chaleur : solidification, condensation et condensation solide."),
+ qx("03",null,"Parmi ces changements d’état, lequel libère de la chaleur ?",
+  "La condensation (gaz → liquide).",["La fusion (solide → liquide).","La vaporisation (liquide → gaz).","La sublimation (solide → gaz)."],
+  "La condensation libère de la chaleur. C’est ce qui ralentit le refroidissement de l’air saturé qui monte."),
+ qx("03",null,"Que désigne la sublimation ?",
+  "Le passage de l’état solide à l’état gazeux.",["Le passage de l’état gazeux à l’état liquide.","Le passage de l’état liquide à l’état solide.","Le passage de l’état gazeux à l’état solide."],
+  "La sublimation est le passage direct de solide à gaz, avec absorption de chaleur. Le passage gaz → solide est la condensation solide."),
+ qx("03",null,"Que désigne la chaleur latente ?",
+  "L’énergie absorbée ou libérée lors d’un changement d’état, sans changement de température.",["La chaleur mesurée par un thermomètre à 2 m du sol.","La chaleur apportée uniquement par le soleil.","La chaleur d’un front chaud."],
+  "La chaleur latente est l’énergie absorbée ou libérée lors d’un changement d’état, sans changement de température."),
+ qx("03",null,"Quel facteur diminue l’évaporation ?",
+  "Une augmentation de l’humidité de l’air.",["Une augmentation de la température.","Une augmentation du vent.","Une augmentation de la surface d’eau."],
+  "L’évaporation augmente avec la température, le vent et la surface d’eau. Elle diminue quand l’humidité de l’air augmente."),
+ qx("03","humidite-relative","Que signifie une humidité relative de 100 % ?",
+  "L’air est saturé en vapeur d’eau.",["L’air ne contient aucune vapeur d’eau.","L’air est à son point de rosée minimal.","L’air est forcément chaud."],
+  "À 100 %, la quantité de vapeur d’eau présente est la quantité maximale possible à cette température : l’air est saturé."),
+ qx("03",null,"Que devient une parcelle d’air qui descend ?",
+  "Elle se comprime et se réchauffe.",["Elle se détend et se refroidit.","Elle se détend et se réchauffe.","Elle se comprime et se refroidit."],
+  "Quand une parcelle d’air descend, la pression augmente : elle se comprime et se réchauffe. À la montée, c’est l’inverse."),
+ qx("03","refroidissement-air","Pourquoi l’air humide saturé se refroidit-il moins vite en montant que l’air sec ?",
+  "La condensation libère de la chaleur latente.",["Parce qu’il est toujours plus chaud au départ.","Parce que la pression ne diminue pas.","Parce qu’il échange de la chaleur avec le sol."],
+  "La condensation libère de la chaleur latente, qui ralentit le refroidissement : environ 0,6 °C/100 m contre 1 °C/100 m pour l’air sec."),
+ qx("03",null,"Comment l’air est-il réchauffé selon la fiche ?",
+  "Le sol absorbe le rayonnement solaire puis réchauffe l’air au contact ; la convection transmet la chaleur vers le haut.",["Le soleil réchauffe directement tout l’air de l’atmosphère de manière uniforme.","L’air est réchauffé uniquement par les nuages.","L’air est réchauffé uniquement par le vent."],
+  "Le sol absorbe le rayonnement solaire et réchauffe l’air au contact. La convection transmet ensuite la chaleur vers le haut."),
+ qx("03",null,"À quelle hauteur mesure-t-on la température de l’air ?",
+  "À environ 2 m du sol.",["À environ 20 cm du sol.","À environ 20 m du sol.","À la surface même du sol."],
+  "La température de l’air est mesurée à environ 2 m du sol."),
+ qx("03",null,"Où l’air froid, plus dense, a-t-il tendance à s’accumuler ?",
+  "Dans les creux et les vallées.",["Sur les sommets uniquement.","Au-dessus des nuages.","Uniquement au-dessus de la mer."],
+  "L’air froid, plus dense, peut s’écouler et s’accumuler dans les creux et les vallées."),
+ /* 04 — Nuages */
+ qx("04",null,"Quels instruments permettent d’observer la base des nuages ?",
+  "Le néphoscope et le lidar.",["La girouette et l’anémomètre.","Le baromètre anéroïde et la girouette.","Le QNH et le QFE."],
+  "Le néphoscope et le lidar permettent d’observer la base des nuages."),
+ qx("04",null,"Quels nuages appartiennent à l’étage supérieur ?",
+  "Ci (cirrus), Cs (cirrostratus) et Cc (cirrocumulus).",["As (altostratus) et Ac (altocumulus).","St (stratus), Sc (stratocumulus) et Ns (nimbostratus).","Cu (cumulus) et Cb (cumulonimbus)."],
+  "Étage supérieur : Ci, Cs et Cc, surtout composés de cristaux de glace."),
+ qx("04",null,"Quels nuages appartiennent à l’étage moyen ?",
+  "As (altostratus) et Ac (altocumulus).",["Ci (cirrus) et Cs (cirrostratus).","St (stratus) et Sc (stratocumulus).","Cu (cumulus) et Cb (cumulonimbus)."],
+  "Étage moyen : altostratus (As) et altocumulus (Ac), en couches ou bancs nuageux étendus."),
+ qx("04",null,"Quel nuage de l’étage inférieur peut donner des précipitations continues ?",
+  "Le nimbostratus (Ns).",["Le cirrus (Ci).","Le cirrocumulus (Cc).","Le stratus (St), toujours."],
+  "Le nimbostratus (Ns) est un nuage bas en couches qui peut donner des précipitations continues."),
+ qx("04",null,"Quels nuages correspondent à un développement vertical ?",
+  "Cu (cumulus) et Cb (cumulonimbus).",["Ci (cirrus) et Cs (cirrostratus).","As (altostratus) et Ac (altocumulus).","St (stratus) et Ns (nimbostratus)."],
+  "Cu et Cb sont liés à la convection. Le Cb peut donner des averses ou des orages."),
+ qx("04","couverture-nuageuse","Que signifie une couverture nuageuse de 8/8 (OVC) ?",
+  "Ciel totalement couvert.",["Ciel totalement dégagé.","Entre 1 et 2 octas de nuages.","Entre 5 et 7 octas de nuages."],
+  "La couverture se mesure en octas : 0/8 = aucun nuage ; 8/8 = ciel totalement couvert (OVC)."),
+ qx("04","couverture-nuageuse","Quelle abréviation correspond à une couverture de 5 à 7 octas ?",
+  "BKN.",["FEW.","SCT.","OVC."],
+  "FEW = 1–2/8, SCT = 3–4/8, BKN = 5–7/8, OVC = 8/8."),
+ qx("04",null,"Quelles caractéristiques décrivent les nuages stratiformes ?",
+  "Grande extension horizontale, faible développement vertical, précipitations faibles à continues, temps souvent stable.",["Fort développement vertical, averses et orages fréquents.","Petits éléments isolés, sans précipitation possible.","Nuages uniquement formés de cristaux de glace."],
+  "Les nuages stratiformes s’étendent horizontalement, avec peu de développement vertical. Le temps est souvent stable."),
+ qx("04",null,"Quelles caractéristiques décrivent les nuages cumuliformes ?",
+  "Fort développement vertical, liés aux mouvements ascendants ; averses et orages possibles.",["Grande extension horizontale et précipitations toujours continues.","Faible développement vertical et temps toujours stable.","Nuages uniquement liés au foehn."],
+  "Les nuages cumuliformes se développent verticalement, grâce aux mouvements ascendants. Averses et orages sont possibles."),
+ qx("04",null,"Quelle suite d’étapes décrit la formation d’un nuage ?",
+  "Air qui monte → détente et refroidissement → saturation → condensation → nuage.",["Air qui descend → compression → réchauffement → évaporation → nuage.","Air qui monte → compression → réchauffement → nuage.","Vent → baisse de la température du sol → nuage, sans mouvement vertical."],
+  "Récapitulatif de la fiche : l’air qui monte se détend et se refroidit jusqu’à saturation ; la condensation forme alors le nuage."),
+ /* 05 — Stabilité, fronts et perturbations */
+ qx("05",null,"Qu’est-ce qu’une masse d’air ?",
+  "Un grand volume d’air aux propriétés relativement homogènes, notamment en température et en humidité.",["Une zone de vent fort en altitude.","Une limite entre deux fronts.","Un nuage de grande taille."],
+  "Une masse d’air est un grand volume d’air aux propriétés homogènes. Elle acquiert ses caractéristiques après un séjour assez long sur une région."),
+ qx("05",null,"Que désigne l’advection ?",
+  "Le déplacement d’une masse d’air vers une autre région.",["La montée de l’air dans un nuage.","La descente de l’air au-dessus d’un anticyclone.","Le refroidissement du sol la nuit."],
+  "L’advection est le déplacement d’une masse d’air vers une autre région."),
+ qx("05","masses-air","Que signifient les lettres A, P, T et E dans le code d’une masse d’air ?",
+  "Arctique (très froid), polaire (froid), tropical (chaud), équatorial (très chaud).",["Atmosphérique, pression, température, énergie.","Altitude, pluie, tempête, éclaircie.","Anticyclone, perturbation, tropopause, ensoleillé."],
+  "A, P, T et E indiquent la température : arctique très froid, polaire froid, tropical chaud, équatorial très chaud."),
+ qx("05","masses-air","Que signifie la lettre c dans le code d’une masse d’air ?",
+  "Continental : plutôt sec.",["Chaud : plutôt humide.","Convectif : instable.","Cumuliforme : nuageux."],
+  "c = continental, plutôt sec ; m = maritime, plutôt humide. Les lettres c et m indiquent l’humidité."),
+ qx("05",null,"Que se passe-t-il quand un sol froid se trouve sous de l’air chaud ?",
+  "Les basses couches se refroidissent et l’atmosphère se stabilise.",["Les basses couches se réchauffent et l’atmosphère devient instable.","De forts cumulus se forment toujours.","L’air chaud descend rapidement."],
+  "Un sol froid refroidit les basses couches : l’atmosphère se stabilise."),
+ qx("05",null,"Que se passe-t-il quand un sol chaud se trouve sous de l’air froid ?",
+  "Les basses couches se réchauffent et l’atmosphère devient instable.",["Les basses couches se refroidissent et l’atmosphère se stabilise.","L’air reste parfaitement stable.","Une occlusion se forme aussitôt."],
+  "Un sol chaud sous de l’air froid réchauffe les basses couches : l’atmosphère devient instable, avec une convection possible et des cumulus."),
+ qx("05",null,"Que sépare le front polaire ?",
+  "L’air froid, qui reste au sol, et l’air chaud, qui se trouve au-dessus.",["Deux anticyclones de même température.","L’air chaud au sol et l’air froid au-dessus.","Le sol et la mer."],
+  "Le front polaire est une zone de rencontre entre air froid et air chaud : l’air froid reste au sol et l’air chaud se trouve au-dessus."),
+ qx("05",null,"De quoi se compose une perturbation, et dans quelle direction se déplace-t-elle généralement ?",
+  "D’une dépression, d’un front chaud et d’un front froid ; d’ouest en est.",["D’un anticyclone et d’un jet-stream ; d’est en ouest.","D’un front chaud et d’une goutte froide ; du nord au sud.","D’un foehn et d’un front stationnaire ; du sud au nord."],
+  "Une perturbation comprend une dépression, un front chaud et un front froid. Elle se déplace généralement d’ouest en est."),
+ qx("05",null,"Quel front avance souvent plus vite, et que peut-il faire ?",
+  "Le front froid ; il peut rattraper le front chaud et former une occlusion.",["Le front chaud ; il rattrape le front froid.","Les deux avancent exactement à la même vitesse.","Le front stationnaire ; il rattrape les deux autres."],
+  "Le front froid avance souvent plus vite que le front chaud. Il peut le rattraper et former une occlusion."),
+ qx("05",null,"Quelle est la durée générale d’une perturbation ?",
+  "De 3 à 10 jours.",["De 1 à 2 heures.","De 12 à 24 heures.","De 3 à 4 semaines."],
+  "Une perturbation dure en général de 3 à 10 jours."),
+ qx("05",null,"Qu’est-ce que le jet-stream ?",
+  "Un courant très rapide en altitude, proche du front polaire, qui guide les perturbations vers l’est.",["Un vent local de vallée qui souffle le jour.","Un nuage de type cirrus.","Un front qui reste immobile."],
+  "Le jet-stream est un courant très rapide en altitude, proche du front polaire. Il guide les perturbations vers l’est."),
+ qx("05","fronts-chaud-froid","Jusqu’à quelle distance environ la zone nuageuse d’un front chaud peut-elle s’étendre ?",
+  "Jusqu’à environ 600 km.",["Jusqu’à environ 6 km.","Jusqu’à environ 60 km.","Jusqu’à environ 6 000 km."],
+  "La zone nuageuse d’un front chaud est étendue, parfois jusqu’à environ 600 km. Les nuages stratiformes y sont fréquents."),
+ qx("05","fronts-chaud-froid","Quelles précipitations sont typiques d’un front chaud ?",
+  "Souvent continues et étendues.",["Averses ou orages concentrés près du front.","Aucune précipitation, jamais.","Uniquement de la grêle."],
+  "Un front chaud donne souvent des précipitations continues et étendues. Un front froid donne plutôt des averses ou des orages."),
+ qx("05","fronts-chaud-froid","Que trouve-t-on derrière un front froid après son passage ?",
+  "De l’air polaire plus froid ; le passage est parfois rapide, avec des turbulences.",["De l’air chaud et stable, sans changement.","Une zone de nuages étendue sur 600 km.","Un anticyclone dynamique obligatoire."],
+  "Après le front froid, l’air polaire est plus froid. Le passage peut être rapide, avec des turbulences."),
+ qx("05","fronts-chaud-froid","Quels nuages un front froid peut-il produire si l’air est instable ?",
+  "Des cumulus ou des cumulonimbus.",["Uniquement des cirrus.","Uniquement des stratus.","Aucun nuage."],
+  "Un front froid donne des cumulus ou des cumulonimbus si l’air est instable, et des nuages stratiformes si l’air est stable."),
+ /* 06 — Occlusions et phénomènes météo */
+ qx("06","formation-occlusion","Que devient la dépression associée à une occlusion ?",
+  "Elle tend à se combler et à s’affaiblir.",["Elle se creuse toujours davantage.","Elle se transforme en anticyclone dynamique.","Elle disparaît instantanément."],
+  "L’occlusion est associée à une dépression qui tend à se combler et à s’affaiblir."),
+ qx("06",null,"Qu’est-ce qu’un front stationnaire ?",
+  "Un front qui se déplace très peu.",["Un front qui avance très vite.","Un front qui existe uniquement en altitude.","Un front toujours sans nuage."],
+  "Un front stationnaire se déplace très peu."),
+ qx("06",null,"Qu’est-ce que la traîne ?",
+  "La zone située derrière le front froid, souvent marquée par des nuages convectifs et des averses.",["La zone située devant le front chaud, sans nuage.","Un nuage lenticulaire au-dessus des Alpes.","Une poche d’air froid isolée en altitude."],
+  "La traîne est la zone située derrière le front froid : nuages convectifs et averses y sont fréquents."),
+ qx("06","foehn-sud","Que devient l’air du foehn du sud en redescendant côté nord des Alpes ?",
+  "Il se comprime et se réchauffe, les nuages se dissipent et une éclaircie de foehn peut apparaître.",["Il se détend et se refroidit, avec formation de nuages.","Il reste à la même température qu’avant l’ascension.","Il se transforme en front froid."],
+  "En redescendant au nord, l’air se comprime et se réchauffe : les nuages se dissipent et une éclaircie de foehn peut apparaître."),
+ qx("06","foehn-sud","Quels phénomènes peuvent accompagner un foehn ?",
+  "Vents forts, turbulences, fortes ascendances ou descendances, ondes de montagne et nuages lenticulaires.",["Uniquement un temps calme et sans turbulence.","Uniquement du brouillard sur les sommets.","Aucun phénomène particulier."],
+  "Le foehn peut s’accompagner de vents forts, de turbulences, d’ascendances et de descendances marquées. Des ondes de montagne et des nuages lenticulaires peuvent apparaître."),
+ qx("06","foehn-sud","Que faut-il retenir d’un ciel dégagé pendant un foehn ?",
+  "Un ciel dégagé ne signifie pas que les conditions de vol sont calmes.",["Un ciel dégagé garantit des conditions de vol calmes.","Le foehn ne se produit jamais par ciel dégagé.","Le foehn n’existe qu’en été."],
+  "Le foehn est fréquent en hiver mais peut aussi se produire en été. Un ciel dégagé ne garantit pas des conditions de vol calmes."),
+ qx("06","anticyclones","Que dire d’un anticyclone froid situé entre deux dépressions ?",
+  "Il est généralement de courte durée.",["Il dure toujours plusieurs semaines.","Il bloque définitivement les perturbations.","Il n’existe pas."],
+  "Un anticyclone froid entre deux dépressions est généralement de courte durée."),
+ qx("06","goutte-froide","Sur quelle carte une goutte froide est-elle souvent visible ?",
+  "Sur une carte à 500 hPa.",["Sur une carte au sol, avec les isobares seulement.","Sur la barbule d’un vent.","Sur un baromètre anéroïde."],
+  "Une goutte froide est une poche d’air froid isolée en altitude, souvent visible sur une carte 500 hPa.")
+];
+var complete050QuizBank=(function(){var seen={},all=[];quizBank.concat(courseExtraQuizBank).forEach(function(q){var k=String(q.question).trim();if(seen[k])return;seen[k]=true;all.push(q)});return all})();
 var officialQuizBank=[
  {question:"À Samedan, la température est de +5 °C à 5 600 ft. Quelle température approximative prévoir à 8 600 ft avec le gradient ISA ?",options:["−1 °C","+11 °C","−6 °C","+5 °C"],correct:0,source:"Examen à blanc 050 · question 1",explanation:"L’écart est de 3 000 ft. Avec environ 2 °C de baisse par 1 000 ft, on retire 6 °C à +5 °C, soit environ −1 °C."},
  {question:"Que représente le QFE d’un aérodrome ?",options:["La pression instantanée réduite au niveau de la mer selon l’ISA.","La pression instantanée réduite au niveau de la mer selon la température réelle.","La pression instantanée mesurée au niveau de la station.","La pression instantanée au niveau moyen de la mer."],correct:2,source:"Examen à blanc 050 · question 2",explanation:"Le QFE est la pression locale mesurée à l’aérodrome. Réglé à l’altimètre, il indique approximativement la hauteur au-dessus de l’aérodrome."},
@@ -477,9 +701,9 @@ function quizReviewWrite(value){try{localStorage.setItem(quizReviewKey(),JSON.st
 function quizHistorySaveCurrent(){var rows=quizHistoryRead();if(!quizFinishedAt||!quizAttemptId)return rows;if(!rows.some(function(r){return r.id===quizAttemptId})){var errors=quizRun.map(function(q,i){var pick=quizPicks[i];if(pick===undefined||q.options[pick].correct)return null;return{question:q.question,answer:q.options[pick].text,expected:q.options.filter(function(o){return o.correct})[0].text,explanation:q.explanation,source:q.source,anchor:q.anchor,figurePage:q.figurePage}}).filter(Boolean);quizReviewWrite({id:quizAttemptId,date:quizFinishedAt.toISOString(),score:quizScore,total:quizRun.length,errors:errors});rows.push({id:quizAttemptId,score:quizScore,total:quizRun.length,date:quizFinishedAt.toISOString(),branch:"050 — Météorologie",series:quizModeName(quizMode)});rows.sort(function(a,b){return a.date.localeCompare(b.date)});quizHistoryWrite(rows)}return rows}
 function addPastQuizAttempt(){var d=$("past-quiz-date").value,t=$("past-quiz-time").value,score=Number($("past-quiz-score").value),total=Number($("past-quiz-total").value),date=new Date(d+"T"+t);if(!d||!t||!Number.isFinite(date.getTime())||!Number.isInteger(score)||!Number.isInteger(total)||total<1||score<0||score>total){say("past-quiz-msg","Vérifie la date, l’heure et le score (le score doit être compris dans le total).");return}var rows=quizHistoryRead();rows.push({id:"past-"+Date.now().toString(36)+Math.random().toString(36).slice(2),score:score,total:total,date:date.toISOString(),branch:"050 — Météorologie",series:"Examen précédent"});rows.sort(function(a,b){return a.date.localeCompare(b.date)});if(!quizHistoryWrite(rows)){say("past-quiz-msg","Impossible d’enregistrer cet examen sur cet appareil.");return}quizView()}
 function quizShuffle(items){var a=items.slice();for(var i=0;i<a.length-1;i++){var j=i+Math.floor(Math.random()*(a.length-i)),t=a[i];a[i]=a[j];a[j]=t}return a}
-function quizModeName(mode){return mode==="bak-all"?"Toutes les questions BAK 050":mode==="ofac"?"Version 20 questions — BAK + examen blanc OFAC":"Questions du cours"}
+function quizModeName(mode){return mode==="bak-all"?"Toutes les questions BAK 050":mode==="ofac"?"Version 20 questions — BAK + examen blanc OFAC":mode==="complete"?"Toutes les questions du cours ("+complete050QuizBank.length+")":mode==="favoris"?"Mes questions favorites":"Questions du cours"}
 var quizAnchors={"Quand on monte en altitude, que devient la pression atmosphérique ?":"pression-altitude","Quel réglage permet de lire l’altitude par rapport au niveau moyen de la mer ?":"qnh-qfe-qff","Dans cette fiche, à quoi sert surtout le QFF ?":"qnh-qfe-qff","Quelle proposition distingue correctement isobares et isohypses ?":"cartes-isobares-isohypses","Un « vent du nord » est nommé ainsi parce qu’il…":"direction-vent","Sur une carte, quelle valeur correspond au triangle plein d’une barbule ?":"barbules-vent","Quel effet les frottements près du sol ont-ils sur le vent ?":"frottements-vent","Quel code décrit une masse d’air polaire maritime ?":"masses-air","À vapeur d’eau réelle inchangée, que se passe-t-il si l’air se réchauffe ?":"humidite-relative","Que désigne le point de rosée ?":"point-rosee","Une transformation adiabatique se fait…":"transformation-adiabatique","Quels repères de refroidissement la fiche donne-t-elle ?":"refroidissement-air","Qu’est-ce qui permet à la vapeur d’eau de se condenser en gouttelettes ou cristaux ?":"noyaux-condensation","Quelle association de couverture nuageuse est correcte ?":"couverture-nuageuse","Quelle différence décrit le mieux les fronts chaud et froid ?":"fronts-chaud-froid","Comment se forme une occlusion ?":"formation-occlusion","Quel repère distingue les deux types d’occlusion dans la fiche ?":"types-occlusion","Lors d’un foehn du sud, quel enchaînement est décrit ?":"foehn-sud","Qu’est-ce qu’une goutte froide selon la fiche ?":"goutte-froide","Quelle association sur les anticyclones est correcte ?":"anticyclones"};
-function startQuiz(mode){quizMode=mode==="bak-all"?"bak-all":mode==="ofac"?"ofac":"cours";var bank=quizMode==="ofac"?officialQuizBank:quizMode==="bak-all"?allBakQuizBank:quizBank;quizRun=quizShuffle(bank.map(function(q){return{question:q.question,options:quizShuffle(q.options.map(function(text,i){return{text:text,correct:i===q.correct}})),explanation:q.explanation,source:q.source||"Questions du cours",anchor:quizAnchors[q.question],figurePage:q.figurePage}}));quizStep=0;quizScore=0;quizPick=null;quizPicks=[];quizResult=false;ficheTargetAnchor=null;quizReviewReturn=false;quizFinishedAt=null;quizAttemptId=null;go("quiz","050")}
+function startQuiz(mode){quizMode=mode==="bak-all"?"bak-all":mode==="ofac"?"ofac":mode==="complete"?"complete":mode==="favoris"?"favoris":"cours";var bank=quizMode==="ofac"?officialQuizBank:quizMode==="bak-all"?allBakQuizBank:quizMode==="complete"?complete050QuizBank:quizMode==="favoris"?favRead():quizBank;if(!bank.length){go("favs","050");return}quizRun=quizShuffle(bank.map(function(q){return{question:q.question,options:quizShuffle(q.options.map(function(text,i){return{text:text,correct:i===q.correct}})),explanation:q.explanation,source:q.source||"Questions du cours",anchor:q.anchor||quizAnchors[q.question],figurePage:q.figurePage||undefined}}));quizStep=0;quizScore=0;quizPick=null;quizPicks=[];quizResult=false;ficheTargetAnchor=null;quizReviewReturn=false;quizFinishedAt=null;quizAttemptId=null;go("quiz","050")}
 function quizBack(){quizReviewReturn=false;go("fiche","050")}
 function downloadQuizResultPdf(){
  var PDF=window.jspdf&&window.jspdf.jsPDF;
@@ -504,20 +728,45 @@ function quizView(){
  if(quizResult){
   var quizTitle=quizModeName(quizMode);var pct=Math.round(quizScore/quizRun.length*100),label=pct===100?"Parfait, aucune confusion !":pct>=75?"Très bon travail, les nuances sont bien comprises.":pct>=50?"Bon début : relis les explications des erreurs puis réessaie.":"Relis la fiche et refais le QCM : les pièges portent sur des notions proches.";
   var wrong=quizRun.map(function(q,i){return{q:q,pick:quizPicks[i]}}).filter(function(x){return x.pick!==undefined&&!x.q.options[x.pick].correct});
-  var review=wrong.length?'<section class="panel"><h2>Questions fausses à revoir ('+wrong.length+')</h2><div class="qcm-review-list">'+wrong.map(function(x){var good=x.q.options.filter(function(o){return o.correct})[0],sourceLine=x.q.source?'<p class="hint">'+esc(x.q.source)+'</p>':'',explanationLink=x.q.anchor?'<button class="btn alt" data-review-anchor="'+esc(x.q.anchor)+'">Aller vers l’explication →</button>':'';return '<article class="qcm-review-item">'+sourceLine+'<h3>'+esc(x.q.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.q.options[x.pick].text)+'</p><p><b>Bonne réponse :</b> '+esc(good.text)+'</p><p class="qcm-explanation">'+esc(x.q.explanation)+'</p>'+explanationLink+'</article>'}).join("")+'</div></section>':'<section class="panel"><h2>Questions à revoir</h2><p class="hint">Aucune réponse fausse : bravo !</p></section>';
+  var review=wrong.length?'<section class="panel"><h2>Questions fausses à revoir ('+wrong.length+')</h2><div class="qcm-review-list">'+wrong.map(function(x){var good=x.q.options.filter(function(o){return o.correct})[0],sourceLine=x.q.source?'<p class="hint">'+esc(x.q.source)+'</p>':'',explanationLink=x.q.anchor?'<button class="btn alt" data-review-anchor="'+esc(x.q.anchor)+'">Aller vers l’explication →</button>':'';return '<article class="qcm-review-item">'+sourceLine+'<h3>'+esc(x.q.question)+'</h3><p><b>Ta réponse :</b> '+esc(x.q.options[x.pick].text)+'</p><p><b>Bonne réponse :</b> '+esc(good.text)+'</p><p class="qcm-explanation">'+esc(x.q.explanation)+'</p>'+explanationLink+favButton(x.q)+'</article>'}).join("")+'</div></section>':'<section class="panel"><h2>Questions à revoir</h2><p class="hint">Aucune réponse fausse : bravo !</p></section>';
   var finished=quizFinishedAt||new Date(),historyRows=quizHistorySaveCurrent();
   $("main").innerHTML='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>Résultat — '+quizTitle+'</h1><section class="panel qcm-result"><p class="qcm-score">'+quizScore+' / '+quizRun.length+'</p><p class="sub">'+pct+' % de bonnes réponses</p><p>'+label+'</p><p class="hint">Date et heure : <b>'+finished.toLocaleString("fr-CH")+'</b><br>Branche : <b>050 — Météorologie</b><br>Tentatives dans ton historique : <b>'+historyRows.length+'</b></p><div class="qcm-actions"><button class="btn" id="quiz-again">Refaire le QCM</button><button class="btn alt" id="quiz-download">Télécharger le résultat</button></div><p class="msg" id="qpdf-msg" role="status"></p></section><details class="panel"><summary><b>Ajouter un examen déjà passé à mon historique</b></summary><p class="hint">Utile pour ajouter ton premier QCM, qui n’avait pas encore été enregistré. Cet historique reste sur cet appareil et ce compte.</p><div class="grid"><div><label for="past-quiz-date">Date</label><input id="past-quiz-date" type="date" value="2026-10-08"></div><div><label for="past-quiz-time">Heure</label><input id="past-quiz-time" type="time" step="1" value="16:22:44"></div><div><label for="past-quiz-score">Bonnes réponses</label><input id="past-quiz-score" type="number" min="0" max="100" placeholder="Score"></div><div><label for="past-quiz-total">Nombre de questions</label><input id="past-quiz-total" type="number" min="1" max="100" value="20"></div></div><button class="btn alt" id="past-quiz-add" type="button">Ajouter cet examen</button><p class="msg" id="past-quiz-msg" role="status"></p></details>'+review;
-  $("quiz-back").onclick=quizBack;$("quiz-again").onclick=function(){startQuiz(quizMode)};$("quiz-download").onclick=downloadQuizResultPdf;$("past-quiz-add").onclick=addPastQuizAttempt;document.querySelectorAll("[data-review-anchor]").forEach(function(b){b.onclick=function(){ficheTargetAnchor=b.dataset.reviewAnchor;quizReviewReturn=true;go("fiche","050")}});return
+  $("quiz-back").onclick=quizBack;$("quiz-again").onclick=function(){startQuiz(quizMode)};$("quiz-download").onclick=downloadQuizResultPdf;$("past-quiz-add").onclick=addPastQuizAttempt;favBind(function(id){return quizRun.filter(function(r){return quizQid(r.question)===id})[0]||null});document.querySelectorAll("[data-review-anchor]").forEach(function(b){b.onclick=function(){ficheTargetAnchor=b.dataset.reviewAnchor;quizReviewReturn=true;go("fiche","050")}});return
  }
  var q=quizRun[quizStep],correctIndex=q.options.findIndex(function(o){return o.correct}),answered=quizPick!==null,isCorrect=answered&&q.options[quizPick].correct;
  var figureLink=q.figurePage?'<p><a class="btn alt" href="assets/bak-pages/page-'+q.figurePage+'.jpg" target="_blank" rel="noopener">Voir la page illustrée du BAK (page '+q.figurePage+')</a></p>':'';
- var html='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>'+(quizModeName(quizMode)+" · Météorologie 050")+'</h1><p class="sub">Choisis une seule réponse. Les questions sont mélangées à chaque partie.</p><section class="panel qcm-panel"><div class="qcm-progress"><b>Question '+(quizStep+1)+' / '+quizRun.length+'</b><b>Score : '+quizScore+'</b></div><div class="qcm-meter" role="progressbar" aria-valuemin="0" aria-valuemax="'+quizRun.length+'" aria-valuenow="'+quizStep+'"><i style="width:'+Math.round(quizStep/quizRun.length*100)+'%"></i></div><p class="hint">'+esc(q.source||"Questions du cours")+'</p><h2 class="qcm-question">'+esc(q.question)+'</h2>'+figureLink+'<div class="qcm-choices">';
+ var html='<p><button class="btn alt" id="quiz-back">← Retour à Météorologie 050</button></p><h1>'+(quizModeName(quizMode)+" · Météorologie 050")+'</h1><p class="sub">Choisis une seule réponse. Les questions sont mélangées à chaque partie.</p><section class="panel qcm-panel"><div class="qcm-progress"><b>Question '+(quizStep+1)+' / '+quizRun.length+'</b><b>Score : '+quizScore+'</b></div><div class="qcm-meter" role="progressbar" aria-valuemin="0" aria-valuemax="'+quizRun.length+'" aria-valuenow="'+quizStep+'"><i style="width:'+Math.round(quizStep/quizRun.length*100)+'%"></i></div><p class="hint">'+esc(q.source||"Questions du cours")+'</p><h2 class="qcm-question">'+esc(q.question)+'</h2><div class="qcm-fav-row">'+favButton(q)+'<span class="hint" id="fav-msg" role="status" aria-live="polite"></span></div>'+figureLink+'<div class="qcm-choices">';
  html+=q.options.map(function(o,i){var cls="qcm-option";if(answered&&i===correctIndex)cls+=" is-right";if(answered&&i===quizPick&&!isCorrect)cls+=" is-wrong";var state=answered&&i===correctIndex?"<span class=qcm-state>✓ Bonne réponse</span>":answered&&i===quizPick&&!isCorrect?"<span class=qcm-state>✗ Ta réponse</span>":"";return'<button class="'+cls+'" data-answer="'+i+'"'+(answered?" disabled":"")+'><span class="qcm-letter">'+String.fromCharCode(65+i)+'</span><span class="qcm-answer">'+esc(o.text)+state+'</span></button>'}).join("");
  html+='</div>';
- if(answered){var feedback=isCorrect?'<strong>✓ Juste !</strong><p>Bonne réponse.</p>':'<strong>✗ Faux. La bonne réponse est :</strong><p>'+esc(q.options[correctIndex].text)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p>';html+='<div class="qcm-feedback '+(isCorrect?"correct":"incorrect")+'" role="status" aria-live="polite">'+feedback+'</div><div class="qcm-actions"><button class="btn" id="quiz-next">'+(quizStep===quizRun.length-1?"Voir mon résultat":"Question suivante →")+'</button></div>'}
- html+='</section>';$("main").innerHTML=html;$("quiz-back").onclick=quizBack;
+ if(answered){var feedback=isCorrect?'<strong>✓ Juste ! Bonne réponse.</strong><p class="qcm-explanation">'+esc(q.explanation)+'</p>':'<strong>✗ Faux. La bonne réponse est :</strong><p>'+esc(q.options[correctIndex].text)+'</p><p class="qcm-explanation">'+esc(q.explanation)+'</p><p class="qcm-fav-prompt"><b>Question difficile ?</b> Tu peux la garder pour la retravailler plus tard.</p>'+favButton(q);html+='<div class="qcm-feedback '+(isCorrect?"correct":"incorrect")+'" role="status" aria-live="polite">'+feedback+'</div><div class="qcm-actions"><button class="btn" id="quiz-next">'+(quizStep===quizRun.length-1?"Voir mon résultat":"Question suivante →")+'</button></div>'}
+ html+='</section>';$("main").innerHTML=html;$("quiz-back").onclick=quizBack;favBind(function(id){return id===quizQid(q.question)?q:null});
  if(!answered)document.querySelectorAll("[data-answer]").forEach(function(b){b.onclick=function(){quizPick=parseInt(b.dataset.answer,10);quizPicks[quizStep]=quizPick;if(q.options[quizPick].correct)quizScore++;quizView()}});
  if(answered)$("quiz-next").onclick=function(){if(quizStep===quizRun.length-1){quizFinishedAt=new Date();quizAttemptId=quizFinishedAt.getTime().toString(36)+Math.random().toString(36).slice(2);quizResult=true;quizHistorySaveCurrent()}else{quizStep++;quizPick=null}quizView()}
+}
+/* ---------- Favoris (050 — Météorologie) ---------- */
+function quizQid(text){var s=String(text||"").trim(),h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return "q"+(h>>>0).toString(36)}
+function favKey(){return "qcm-favorites-v1:050:"+String(user&&user.id||"unknown")}
+function favRead(){try{var rows=JSON.parse(localStorage.getItem(favKey())||"[]");if(!Array.isArray(rows))return[];var seen={};return rows.filter(function(r){if(!r||typeof r.id!=="string"||seen[r.id]||typeof r.question!=="string"||!Array.isArray(r.options)||!Number.isInteger(r.correct)||typeof r.options[r.correct]!=="string")return false;seen[r.id]=true;return true})}catch(e){return[]}}
+function favWrite(rows){try{localStorage.setItem(favKey(),JSON.stringify(rows));return true}catch(e){return false}}
+function favHas(id){return favRead().some(function(r){return r.id===id})}
+function favSnapshot(q){var texts=q.options.map(function(o){return typeof o==="string"?o:o.text}),correct=typeof q.options[0]==="string"?q.correct:q.options.findIndex(function(o){return o.correct});return{id:quizQid(q.question),question:q.question,options:texts,correct:correct,explanation:q.explanation||"",source:q.source||"Questions du cours",anchor:q.anchor||quizAnchors[q.question]||"",figurePage:q.figurePage||undefined,added:new Date().toISOString()}}
+function favToggle(q){var id=quizQid(q.question),rows=favRead(),i=rows.findIndex(function(r){return r.id===id});if(i>=0)rows.splice(i,1);else rows.push(favSnapshot(q));return favWrite(rows)?(i<0?"added":"removed"):"error"}
+function favButton(q){var on=favHas(quizQid(q.question));return '<button type="button" class="btn alt qcm-fav'+(on?" is-fav":"")+'" data-fav="'+quizQid(q.question)+'" aria-pressed="'+(on?"true":"false")+'">'+(on?"★ Retirer des favoris":"☆ Ajouter aux favoris")+'</button>'}
+function favRefresh(id){var on=favHas(id);document.querySelectorAll('[data-fav="'+id+'"]').forEach(function(b){b.classList.toggle("is-fav",on);b.setAttribute("aria-pressed",on?"true":"false");b.textContent=on?"★ Retirer des favoris":"☆ Ajouter aux favoris"})}
+function favBind(resolve){document.querySelectorAll("[data-fav]").forEach(function(b){b.onclick=function(){var id=b.dataset.fav,q=resolve(id);if(!q)return;var r=favToggle(q),m=$("fav-msg");favRefresh(id);if(m)m.textContent=r==="added"?"Ajoutée à tes favoris.":r==="removed"?"Retirée de tes favoris.":"Impossible d’enregistrer les favoris sur cet appareil."}})}
+function favLaunchHtml(){var n=favRead().length;return '<section class="panel qcm-launch"><h2>⭐ Mes questions favorites</h2><p class="hint">'+(n?"Tu as <b>"+n+"</b> question"+(n>1?"s":"")+" en favoris. Elles restent enregistrées sur cet appareil, même après avoir fermé le site.":"Aucune question favorite pour l’instant. Pendant un QCM, utilise « Ajouter aux favoris » sous la question.")+'</p><div class="qcm-actions"><button class="btn alt" id="favs-open">Voir mes favoris ('+n+')</button><button class="btn" id="favs-quiz-start"'+(n?"":" disabled")+'>Réviser mes favoris en QCM</button></div></section>'}
+function favCard(r){var opts=r.options.map(function(t,i){return '<li'+(i===r.correct?' class="is-right"':'')+'><b>'+String.fromCharCode(65+i)+'.</b><span>'+esc(t)+(i===r.correct?' <b>✓ Bonne réponse</b>':'')+'</span></li>'}).join("");return '<article class="qcm-review-item fav-item"><p class="hint">'+esc(r.source||"Questions du cours")+'</p><h3>'+esc(r.question)+'</h3><ol class="fav-options">'+opts+'</ol><p class="qcm-explanation"><b>Explication :</b> '+esc(r.explanation)+'</p>'+(r.anchor?'<button class="btn alt" data-fav-anchor="'+esc(r.anchor)+'">Aller vers la fiche →</button>':'')+'<button class="btn alt" data-fav-remove="'+esc(r.id)+'">★ Retirer des favoris</button></article>'}
+function favsView(){
+ if(cur!=="050"){go("fiches");return}
+ var rows=favRead();
+ var h='<p><button class="btn alt" id="favs-back">← Météorologie 050</button></p><h1>Mes questions favorites</h1><p class="sub">Les questions que tu as gardées pour les retravailler · 050 — Météorologie.</p>';
+ if(!rows.length)h+='<section class="panel"><p><b>Aucune question favorite pour l’instant.</b></p><p class="hint">Pendant un QCM, appuie sur « ☆ Ajouter aux favoris » sous la question. Si tu te trompes, le site te le propose aussi.</p></section>';
+ else h+='<section class="panel"><p><b>'+rows.length+' question'+(rows.length>1?"s":"")+' en favoris</b></p><div class="qcm-actions"><button class="btn" id="favs-start">Réviser mes favoris en QCM</button></div></section><div class="qcm-review-list">'+rows.map(favCard).join("")+'</div>';
+ $("main").innerHTML=h;
+ $("favs-back").onclick=function(){go("fiche","050")};
+ if($("favs-start"))$("favs-start").onclick=function(){startQuiz("favoris")};
+ document.querySelectorAll("[data-fav-remove]").forEach(function(b){b.onclick=function(){var id=b.dataset.favRemove;favWrite(favRead().filter(function(r){return r.id!==id}));favsView()}});
+ document.querySelectorAll("[data-fav-anchor]").forEach(function(b){b.onclick=function(){ficheTargetAnchor=b.dataset.favAnchor;quizReviewReturn=false;go("fiche","050")}})
 }
 var understandingRun=[],understandingIndex=0,understandingScore=0,understandingAnswer="",understandingChecked=false,understandingCorrect=false,understandingResults=[];
 function startUnderstanding(size){
@@ -589,7 +838,7 @@ function chronoView(){
  };
  $("chrono-reset").onclick=function(){chronoElapsed=0;chronoStartedAt=null;if(chronoInterval){clearInterval(chronoInterval);chronoInterval=null}chronoView()}
 }
-function render(){if(!user)return;nav();({dash:dash,dashReview:dashReview,fiches:fiches,fiche:ficheView,quiz:quizView,understanding:understandingView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
+function render(){if(!user)return;nav();({dash:dash,dashReview:dashReview,fiches:fiches,fiche:ficheView,quiz:quizView,favs:favsView,understanding:understandingView,timer:chronoView,sub:sub,add:add,cal:cal,profile:profileV,set:setv})[view]()}
 })();
 </script>
 </body>
