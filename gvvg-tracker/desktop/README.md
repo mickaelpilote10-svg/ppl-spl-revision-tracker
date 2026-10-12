@@ -1,19 +1,25 @@
-# Application Windows
+# Applications Windows et Mac
 
-Cette application est une fenêtre dédiée pour le site en ligne PPL(A) / SPL Revision Tracker. Elle a besoin d'une connexion Internet pour Supabase, les comptes et les données.
+Ces applications sont une fenêtre dédiée pour le site en ligne PPL(A) / SPL Revision Tracker. Elles ont besoin d'une connexion Internet pour Supabase, les comptes et les données.
 
-## Télécharger le fichier EXE
+**Les mises à jour du site (nouveaux QCM, statistiques, etc.) apparaissent automatiquement** dans les applications au prochain démarrage : elles ouvrent le site de production. Il n'est donc pas nécessaire de réinstaller l'application à chaque changement du site, seulement quand ce dossier `desktop` change (version 1.1.0 actuelle).
 
-1. Ouvre le dépôt GitHub privé.
-2. Clique sur **Actions**.
-3. Ouvre le dernier lancement réussi de **Build Windows EXE**.
-4. Dans **Artifacts**, télécharge **PPL-SPL-Revision-Tracker-Windows**.
-5. Décompresse le ZIP et lance le fichier `PPL-SPL-Revision-Tracker-1.0.0-x64.exe`.
+## Télécharger les installeurs
 
-Le fichier est une version portable : pas d'installation et pas de droits administrateur nécessaires. Les mises à jour du site apparaissent dans l'application après redémarrage, car elle ouvre le site de production.
+1. Ouvre le dépôt GitHub, onglet **Actions**.
+2. Ouvre le dernier lancement réussi de **Build desktop installers** (ou clique **Run workflow** pour en lancer un nouveau).
+3. Dans **Artifacts**, télécharge :
+   - **PPL-SPL-Revision-Tracker-Windows** : ZIP contenant `PPL-SPL-Revision-Tracker-1.1.0-Setup.exe` (installeur Windows 64 bits) ;
+   - **PPL-SPL-Revision-Tracker-macOS** : ZIP contenant deux `.dmg` — `arm64` pour les Mac récents (puce M1/M2/M3/M4), `x64` pour les Mac Intel.
 
-## Avertissement Windows
+## Avertissements au premier lancement
 
-Le fichier n'est pas signé par un certificat éditeur payant. Windows SmartScreen peut afficher un avertissement au premier lancement. L'application est compilée par le workflow GitHub de ce dépôt. Ne télécharge le fichier que depuis l'onglet **Actions** de ton dépôt.
+Les applications ne sont pas signées par un certificat éditeur payant.
+- **Windows** : SmartScreen peut afficher un avertissement → **Informations complémentaires** → **Exécuter quand même**.
+- **Mac** : clic droit sur l'application → **Ouvrir** → **Ouvrir**.
 
-Aucune clé secrète Supabase n'est ajoutée à l'application. Elle ouvre l'adresse Vercel déjà configurée dans le code.
+Aucune clé secrète Supabase n'est ajoutée aux applications : elles ouvrent l'adresse Vercel déjà configurée dans le code.
+
+## iPhone / iPad
+
+Pas de fichier à installer : le site est installable depuis Safari (**Partager → Sur l'écran d'accueil**). Une vraie application iOS (.ipa) nécessite un compte Apple Developer payant.

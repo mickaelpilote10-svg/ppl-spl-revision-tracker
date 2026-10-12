@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PPL(A) / SPL Revision Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="theme-color" content="#0f1b29">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PPL SPL">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈️</text></svg>">
 <style>
 :root{--bg:#eef3f7;--surface:#fff;--ink:#14263a;--muted:#5b6b7c;--line:#cfd9e3;--ppl:#1f5f99;--spl:#2a7d4f;--on:#fff;--warm:#c9780b;--err:#b3341f;--ok:#2a7d4f}
@@ -418,7 +425,7 @@ function profileV(){
   var r=await sb.auth.updateUser({password:p});if(r.error){fail("m-pp",r.error);return}$("p-pw").value=$("p-pw2").value="";say("m-pp","Votre mot de passe a été modifié avec succès.",true)};
  $("p-out").onclick=logout}
 
-function setv(){$("main").innerHTML='<h1>Paramètres</h1><section class="panel"><h2>🧠 Flashcards Quizlet — 050</h2><label for="ql">Lien de mes flashcards Quizlet 050</label><input id="ql" type="url" placeholder="https://quizlet.com/…" value="'+esc(profile.quizlet_link||"")+'"><p><button class="btn" id="qs">Enregistrer le lien</button> <button class="btn alt" id="qc">Supprimer le lien</button></p><p class="msg" id="qm" role="status"></p></section><section class="panel"><h2>Compte</h2><button class="btn alt" id="so">Se déconnecter</button></section>';
+function setv(){$("main").innerHTML='<h1>Paramètres</h1><section class="panel" id="install-help"><h2>📲 Installer l’application</h2><p class="hint"><b>iPhone / iPad :</b> ouvre ce site dans <b>Safari</b>, touche le bouton <b>Partager</b> (carré avec une flèche), puis <b>Sur l’écran d’accueil</b> et <b>Ajouter</b>. L’icône apparaît comme une vraie application, en plein écran.</p><p class="hint"><b>Android :</b> menu ⋮ de Chrome → <b>Ajouter à l’écran d’accueil</b>.</p><p class="hint"><b>Mac / Windows :</b> télécharge l’installeur dans l’onglet Actions de GitHub (voir le README du dossier desktop).</p></section><section class="panel"><h2>🧠 Flashcards Quizlet — 050</h2><label for="ql">Lien de mes flashcards Quizlet 050</label><input id="ql" type="url" placeholder="https://quizlet.com/…" value="'+esc(profile.quizlet_link||"")+'"><p><button class="btn" id="qs">Enregistrer le lien</button> <button class="btn alt" id="qc">Supprimer le lien</button></p><p class="msg" id="qm" role="status"></p></section><section class="panel"><h2>Compte</h2><button class="btn alt" id="so">Se déconnecter</button></section>';
  $("so").onclick=logout;
  async function saveLink(v,msg){var r=await sb.from("profiles").update({quizlet_link:v}).eq("id",user.id);if(r.error){fail("qm",r.error);return}profile.quizlet_link=v;say("qm",msg,true)}
  $("qs").onclick=function(){var v=$("ql").value.trim();if(!v){say("qm","Collez d’abord le lien de votre jeu Quizlet.");return}
