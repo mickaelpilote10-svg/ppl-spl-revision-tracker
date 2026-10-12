@@ -304,6 +304,15 @@ function nav(){var t=[["dash","Tableau de bord"],["fiches","Mes fiches de révis
 function seg(){return '<div class="seg" role="group" aria-label="Filtrer les statistiques">'+[["all","Toutes (9)"],["ppl","PPL(A)"],["spl","SPL / Planeur"]].map(function(a){return '<button data-f="'+a[0]+'" aria-pressed="'+(filter===a[0])+'">'+a[1]+'</button>'}).join("")+'</div>'}
 function bindSeg(){document.querySelectorAll("[data-f]").forEach(function(b){b.onclick=function(){filter=b.dataset.f;render()}})}
 
+function revisionSpan(){var set={};
+ sessions.forEach(function(x){if(/^\d{4}-\d{2}-\d{2}/.test(x.date||""))set[x.date.slice(0,10)]=1});
+ quizHistoryRead().forEach(function(x){var d=new Date(x.date);if(!isNaN(d))set[iso(d)]=1});
+ var m=srsRead();Object.keys(m).forEach(function(k){var l=m[k]&&m[k].l;if(/^\d{4}-\d{2}-\d{2}/.test(l||""))set[String(l).slice(0,10)]=1});
+ var days=Object.keys(set).sort();if(!days.length)return null;
+ var a=days[0],b=days[days.length-1],span=Math.round((Date.UTC(+b.slice(0,4),+b.slice(5,7)-1,+b.slice(8,10))-Date.UTC(+a.slice(0,4),+a.slice(5,7)-1,+a.slice(8,10)))/864e5)+1;
+ return{first:a,last:b,span:span,active:days.length}}
+function revisionSpanHtml(){var s=revisionSpan();if(!s)return '<section class="panel dash-resume"><div><h2>📅 Mes jours de révision</h2><p class="hint">Dès ta première séance ou ton premier QCM, le compteur de jours apparaîtra ici.</p></div></section>';
+ return '<section class="panel dash-resume" id="rev-span"><div><h2>📅 Mes jours de révision</h2><p class="hint">Du <b>'+esc(fd(s.first))+'</b> au <b>'+esc(fd(s.last))+'</b> : <b>'+s.span+' jour'+(s.span>1?"s":"")+'</b> depuis ta première journée de révision jusqu’à la dernière · <b>'+s.active+' jour'+(s.active>1?"s":"")+'</b> où tu as réellement révisé.</p></div></section>'}
 function dash(){
  var totals=st(fs()),fn=profile.first_name||(user.user_metadata||{}).first_name||"";
  var lastSession=sessions.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"")})[0];
@@ -311,6 +320,7 @@ function dash(){
  var heroAction=lastSession?'<button class="btn" id="dash-resume">Reprendre '+esc(by(lastSession.s).n)+' →</button>':'<button class="btn" id="dash-resume">Choisir une matière →</button>';
  var h='<section class="dash-hero"><div class="dash-hero-copy"><p class="dash-eyebrow">PPL(A) / SPL · ESPACE DE RÉVISION</p><h1>Bonjour '+esc(fn)+' 👋</h1><p>Retrouve ta progression et reprends facilement là où tu en étais.</p>'+heroAction+'</div></section>'+seg();
  h+='<div class="dash-kpis"><div class="dash-kpi"><b>'+dur(totals.min)+' révisées</b><span>Temps total de révision</span></div><div class="dash-kpi"><b>'+totals.n+'</b><span>Séances enregistrées</span></div><div class="dash-kpi"><b>'+esc(totals.last)+'</b><span>Dernière séance</span></div></div>';
+ h+=revisionSpanHtml();
  if(lastQuiz){var quizDate=new Date(lastQuiz.date);h+='<section class="panel dash-resume"><div><h2>Dernier examen — '+esc(lastQuiz.branch||"050 — Météorologie")+'</h2><p class="hint">'+esc(lastQuiz.series||"QCM")+' · '+quizDate.toLocaleString("fr-CH")+' · Score : <b>'+Number(lastQuiz.score)+' / '+Number(lastQuiz.total)+'</b></p></div><button class="btn alt" id="dash-meteo">Ouvrir Météorologie 050 →</button></section>'}
  if(lastQuiz&&lastReview&&lastReview.id===lastQuiz.id&&lastReview.errors.length){h+='<section class="panel dash-review"><h2>À revoir</h2><p class="hint">'+lastReview.errors.length+' question'+(lastReview.errors.length>1?"s":"")+' à reprendre dans ton dernier examen.</p><button class="btn alt" id="dash-review-errors">Réviser mes erreurs →</button></section>'}
  if(Object.keys(srsRead()).length){var srsDueN=srsDue().length;h+=srsDueN?'<section class="panel dash-resume"><div><h2>🔁 Révision du jour</h2><p class="hint"><b>'+srsDueN+'</b> question'+(srsDueN>1?"s":"")+' de Météorologie 050 à revoir aujourd’hui.</p></div><button class="btn" id="dash-srs">Réviser maintenant →</button></section>':'<section class="panel dash-resume"><div><h2>🔁 Révision du jour</h2><p class="hint">Rien à revoir aujourd’hui : bravo !</p></div><button class="btn alt" id="dash-stats">Voir mes statistiques →</button></section>'}
