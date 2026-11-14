@@ -439,14 +439,15 @@ function coachView(){ $("main").innerHTML='<h1>Coach de théorie</h1><p class="s
 function fiches(){
  var h='<h1>Mes fiches de révisions</h1><p class="sub">Choisis une branche pour ouvrir ta fiche de révision.</p>';
  h+='<section class="panel qcm-launch"><h2>🧭 Coach de théorie</h2><p class="hint">Parcours progressif, rappel actif et révisions espacées pour les branches 050 et 010.</p><button class="btn" id="open-coach">Ouvrir le coach →</button></section>';
+ h+='<section class="panel qcm-launch"><h2>QUESTION OFAC · OFAC OFFICIEL</h2><p class="hint">2 201 questions classées par branche et réparties dans les parcours PPL et SPL. Les questions incertaines sont signalées pour vérification.</p><button class="btn" id="open-ofac">Ouvrir QUESTION OFAC →</button></section>';
  h+='<section class="cat ppl"><div class="hd"><h2>✈️ PPL(A)</h2><p>Fiches de révision par matière</p></div><button class="row" data-fiche="010"><span class="code">010</span><span><strong>Droit aérien</strong><br><small>Fiche de cours · QCM · compréhension</small></span><span class="n">Ouvrir →</span></button><button class="row" data-fiche="050"><span class="code">050</span><span><strong>Météorologie</strong><br><small>Fiche de révision · 6 chapitres</small></span><span class="n">Ouvrir →</span></button></section>';
  $("main").innerHTML=h;
- document.querySelectorAll("[data-fiche]").forEach(function(b){b.onclick=function(){go("fiche",b.dataset.fiche)}}); $("open-coach").onclick=function(){go("coach")}
+ document.querySelectorAll("[data-fiche]").forEach(function(b){b.onclick=function(){go("fiche",b.dataset.fiche)}}); $("open-coach").onclick=function(){go("coach")}; $("open-ofac").onclick=function(){window.location.href="ofac.html"}
 }
 function ficheView(){
  if(cur==="010"){
-  $("main").innerHTML='<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Droit aérien 010</h1><p class="sub">Synthèse de cours · QCM · test de compréhension</p><section class="panel qcm-launch"><h2>Parcours d’apprentissage 010</h2><p class="hint">Travaille par leçons, teste ta mémoire puis reviens selon ton calendrier de répétition espacée.</p><button class="btn" id="coach-010-open">Ouvrir le coach 010 →</button></section><section class="panel fiche-frame"><iframe title="Fiche de révision Droit aérien 010" src="fiches/droit-aerien-010.html" loading="lazy"></iframe></section>';
-  $("fiches-back").onclick=function(){go("fiches")};$("coach-010-open").onclick=function(){go("coach")};return
+  $("main").innerHTML='<p><button class="btn alt" id="fiches-back">← Mes fiches de révisions</button></p><h1>Droit aérien 010</h1><p class="sub">Synthèse de cours · QUESTION OFAC</p><section class="panel qcm-launch"><h2>QUESTION OFAC · OFAC OFFICIEL</h2><p class="hint">La banque officielle importée est organisée par licence et par branche. La fiche de cours 010 est conservée ci-dessous.</p><button class="btn" id="ofac-010-open">Ouvrir QUESTION OFAC →</button></section><section class="panel qcm-launch"><h2>Parcours d’apprentissage 010</h2><p class="hint">Travaille par leçons, teste ta mémoire puis reviens selon ton calendrier de répétition espacée.</p><button class="btn" id="coach-010-open">Ouvrir le coach 010 →</button></section><section class="panel fiche-frame"><iframe title="Fiche de révision Droit aérien 010" src="fiches/droit-aerien-010.html" loading="lazy"></iframe></section>';
+  $("fiches-back").onclick=function(){go("fiches")};$("coach-010-open").onclick=function(){go("coach")};$("ofac-010-open").onclick=function(){window.location.href="ofac.html"};return
  }
  if(cur!=="050"){go("fiches");return}
  var target=ficheTargetAnchor,backToReview=quizReviewReturn;ficheTargetAnchor=null;
