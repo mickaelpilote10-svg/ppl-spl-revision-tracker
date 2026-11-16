@@ -50,7 +50,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3
 .card .links{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;margin-top:10px}
 .card .field{margin-bottom:12px}.card .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:380px){.card .two{grid-template-columns:1fr}}
-\n#app{position:relative;isolation:isolate}
+
+#app{position:relative;isolation:isolate}
 #app::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:var(--aviation-bg,none);background-position:center;background-size:cover;background-repeat:no-repeat;opacity:.075;filter:saturate(.72)}
 :root[data-theme="dark"] #app::before{opacity:.055}
 /* ---------- Application ---------- */
@@ -231,7 +232,8 @@ footer b{color:var(--ink)}
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
-var themeRoot=document.documentElement;\nfetch("assets/hb-teb-background.jpg.b64").then(function(r){if(!r.ok)throw Error("background");return r.text()}).then(function(b){document.documentElement.style.setProperty("--aviation-bg",'url("data:image/jpeg;base64,'+b.trim()+'")')}).catch(function(){});
+var themeRoot=document.documentElement;
+fetch("assets/hb-teb-background.jpg.b64").then(function(r){if(!r.ok)throw Error("background");return r.text()}).then(function(b){document.documentElement.style.setProperty("--aviation-bg",'url("data:image/jpeg;base64,'+b.trim()+'")')}).catch(function(){});
 function applyTheme(theme){
  if(theme==="dark"||theme==="light"){themeRoot.setAttribute("data-theme",theme)}
  else{themeRoot.removeAttribute("data-theme")}
