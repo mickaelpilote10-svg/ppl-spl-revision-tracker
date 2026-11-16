@@ -15,7 +15,14 @@
 <style>
 :root{--bg:#eef3f7;--surface:#fff;--ink:#14263a;--muted:#5b6b7c;--line:#cfd9e3;--ppl:#1f5f99;--spl:#2a7d4f;--on:#fff;--warm:#c9780b;--err:#b3341f;--ok:#2a7d4f}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1b29;--surface:#172637;--ink:#e6edf4;--muted:#93a3b4;--line:#2a3d52;--ppl:#6fb1ea;--spl:#5cc58a;--on:#0b1622;--warm:#f0a73a;--err:#ff8b75;--ok:#5cc58a}}
-*,*::before,*::after{box-sizing:border-box}
+
+/* ---------- Thème sombre manuel ---------- */
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1b29;--surface:#172637;--ink:#e6edf4;--muted:#93a3b4;--line:#2a3d52;--ppl:#6fb1ea;--spl:#5cc58a;--on:#0b1622;--warm:#f0a73a;--err:#ff8b75;--ok:#5cc58a}
+:root[data-theme="light"]{color-scheme:light;--bg:#eef3f7;--surface:#fff;--ink:#14263a;--muted:#5b6b7c;--line:#cfd9e3;--ppl:#1f5f99;--spl:#2a7d4f;--on:#fff;--warm:#c9780b;--err:#b3341f;--ok:#2a7d4f}
+.theme-toggle{flex:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:7px 11px;font:600 .88rem/1.2 inherit;cursor:pointer}
+.theme-toggle:hover{border-color:var(--warm)}
+.wrap>header{flex-wrap:wrap}
+\n*,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3","Segoe UI",system-ui,sans-serif}
 [hidden]{display:none!important}
@@ -207,7 +214,7 @@ footer b{color:var(--ink)}
 <!-- ============ APPLICATION ============ -->
 <div id="app" hidden>
 <div class="wrap">
-<header><span class="brandmark-crop"><img src="assets/logo-mickael.png" alt="Logo de Mickael Rouiller" hidden onload="this.hidden=false"></span><span class="brand">PPL(A) / SPL Revision Tracker</span></header>
+<header><span class="brandmark-crop"><img src="assets/logo-mickael.png" alt="Logo de Mickael Rouiller" hidden onload="this.hidden=false"></span><span class="brand">PPL(A) / SPL Revision Tracker</span><button type="button" class="theme-toggle" id="theme-toggle" aria-label="Activer le mode sombre">🌙 Mode sombre</button></header>
 <nav id="nav"></nav>
 <main id="main"></main>
 </div>
@@ -221,6 +228,17 @@ footer b{color:var(--ink)}
 <script>
 (function(){
 var $=function(i){return document.getElementById(i)};
+var themeRoot=document.documentElement;
+function applyTheme(theme){
+ if(theme==="dark"||theme==="light"){themeRoot.setAttribute("data-theme",theme)}
+ else{themeRoot.removeAttribute("data-theme")}
+ var b=document.getElementById("theme-toggle");
+ if(b){var dark=themeRoot.getAttribute("data-theme")==="dark"||(themeRoot.getAttribute("data-theme")!=="light"&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);b.textContent=dark?"☀️ Mode clair":"🌙 Mode sombre";b.setAttribute("aria-label",dark?"Désactiver le mode sombre":"Activer le mode sombre")}
+}
+var savedTheme=null;try{savedTheme=localStorage.getItem("ppl-tracker-theme")}catch(e){}
+applyTheme(savedTheme||"system");
+document.addEventListener("click",function(e){if(e.target&&e.target.id==="theme-toggle"){var current=themeRoot.getAttribute("data-theme");var systemDark=!current&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var next=(current==="dark"||(!current&&systemDark))?"light":"dark";try{localStorage.setItem("ppl-tracker-theme",next)}catch(e){}applyTheme(next)}});
+
 function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 var CFG=window.APP_CONFIG||{};
 function pane(n){["login","signup","forgot","reset","notice","setup"].forEach(function(p){$("p-"+p).hidden=(p!==n)});$("auth").hidden=false;$("app").hidden=true}
