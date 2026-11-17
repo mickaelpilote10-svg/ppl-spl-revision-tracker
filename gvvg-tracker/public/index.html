@@ -52,8 +52,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Source Sans 3
 @media (max-width:380px){.card .two{grid-template-columns:1fr}}
 
 #app{position:relative;isolation:isolate}
-#app::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:var(--aviation-bg,none);background-position:center;background-size:cover;background-repeat:no-repeat;opacity:.075;filter:saturate(.72)}
-:root[data-theme="dark"] #app::before{opacity:.055}
+/* Filigrane HB-TEB désormais appliqué globalement via body::after */
 /* ---------- Application ---------- */
 .wrap{max-width:860px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 24px}
 header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -152,6 +151,12 @@ ul.log button{background:none;border:0;color:var(--err);cursor:pointer;font:inhe
 .exam-card{border-left:5px solid var(--warm)}.exam-card h2{margin-bottom:8px}.exam-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:12px}.exam-details div{padding:10px 12px;border-radius:8px;background:var(--bg)}.exam-details b{display:block;font-size:.85rem;color:var(--muted);margin-bottom:3px}.exam-details span{font-weight:700}.exam-note{margin:12px 0 0;color:var(--muted);font-size:.9rem}
 footer{max-width:860px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;color:var(--muted);font-size:.88rem}
 footer b{color:var(--ink)}
+
+/* HB-TEB : filigrane photographique commun à toutes les pages */
+body::after{content:"";position:fixed;inset:0;z-index:99;pointer-events:none;background-image:var(--aviation-bg,none);background-position:center center;background-size:cover;background-repeat:no-repeat;opacity:.075;filter:saturate(.72)}
+@media(prefers-color-scheme:dark){body::after{opacity:.055}}
+:root[data-theme="dark"] body::after{opacity:.055}
+:root[data-theme="light"] body::after{opacity:.075}
 </style>
 </head>
 <body>
